@@ -16,6 +16,8 @@
 
 #include <sys/time.h>
 
+#define PORT 64912
+
 #define SA struct sockaddr  // cast shortener
 
 #define MAX_SERVER_BACKLOG 25   // max 25 clients in lobby
@@ -193,7 +195,7 @@ int main(enum MAIN_OPTION opt)
 
         servsockfd = socket(AF_INET, SOCK_STREAM, 0);
         serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(64912);
+        serv_addr.sin_port = htons(PORT);
         serv_addr.sin_addr.s_addr = inet_addr("10.0.0.224");
 
         if (setsockopt(servsockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
