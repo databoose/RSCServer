@@ -1,2 +1,15 @@
+# debug build output
 debug_builds/massif.out.9-20
 debug_builds/valgrind-out.txt
+
+# our executable, this is automatically compiled/generated anyways so no need to upload
+RSC_Server
+
+# object files we probably shouldn't upload to the remote
+cmd_input.o
+colors.o
+logger.o
+main.o
+mysql.o
+timer.o
+utils.o
