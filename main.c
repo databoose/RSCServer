@@ -142,7 +142,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     {
         LOGF_DEBUG(thl, 0, "Verified", "printf");
 
-        memset(&recv_buf[0], '\0', sizeof(recv_buf));
+        memset(recv_buf, '\0', sizeof(recv_buf));
         int send_status;
         send_status = send(clisock, (void *)verif_send_str, (size_t)lengthofchar(verif_send_str), 0);
         if (send_status == -1)

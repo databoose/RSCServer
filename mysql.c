@@ -12,8 +12,11 @@ unsigned short int port = 3306; // 3306 is default mysql port
 static char *unix_socket = NULL;
 unsigned int flag = 0;
 
+char query[50];
+
 void insert_query(MYSQL *conn, char* query)
 {
+
     if(mysql_query(conn, query)) {
         printf("MySQL query error : %s\n",mysql_error(conn)); // Returns the error message for the most recently invoked MySQL function. 
     }
@@ -25,7 +28,7 @@ void insert_query(MYSQL *conn, char* query)
 
 void print_table_contents(MYSQL *conn, char* table)
 {
-    char query[50];
+    memset(query, '\0', sizeof(query)); // zeroing out query string incase some remains
 
     sprintf(query, "SELECT * FROM %s", table); // select all fields in table that we specify in the print_table_contents call
     if(mysql_query(conn, query)) {
