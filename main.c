@@ -105,7 +105,6 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         if (strcmp(ipsignal.SIGNAL_IP[i],"") == 0) // if blank, let's populate this one
         {
             strncpy(ipsignal.SIGNAL_IP[i], THREAD_IP, sizeof(ipsignal.SIGNAL_IP[i]));
-            //for (int i=0; i<=ipsignal_rawlen; i++) {printf("- %s\n", ipsignal.SIGNAL_IP[i]);}
             usleep(380 * 1000); // 380ms to wait for timer thread to register that we just ran
             strncpy(ipsignal.SIGNAL_IP[i], "", sizeof(ipsignal.SIGNAL_IP[i]));
 
