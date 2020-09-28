@@ -4,7 +4,7 @@ HEADER	=
 OUT	= RSC_Server
 CC	 = ccache gcc # for compiler caching
 
-FLAGS	 =  -c -O2 -Wall -Wmain -std=c99
+FLAGS	 =  -c -O2 -Wall -Wmain -std=c99 -fdata-sections -ffunction-sections # last two options remove dead code
 LFLAGS	 = `mysql_config --cflags --libs` -lpthread
 
 all: $(OBJS)

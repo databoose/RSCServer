@@ -30,8 +30,7 @@ void handle_timer(void *VPTR_THREAD_IP)
     }
 
     append_ipaddrtimer(THREAD_IP);
-
-    srand((int)pthread_self());
+    
     int TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
     LOGF_DEBUG(thl_timer, 0, "Timer TID : %d", TID, NULL);
 

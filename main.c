@@ -61,16 +61,6 @@ struct connected ipsignal;
           ( IMPLEMENTED ) eventually cut off the timer thread after the client doesn't talk for a while (aka timeout)
 */
 
-void print_recv_err()
-{
-
-}
-
-void print_write_err()
-{
-
-}
-
 void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_seconds)
 {
     /*
@@ -117,7 +107,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
             strncpy(ipsignal.SIGNAL_IP[i], THREAD_IP, sizeof(ipsignal.SIGNAL_IP[i]));
             //for (int i=0; i<=ipsignal_rawlen; i++) {printf("- %s\n", ipsignal.SIGNAL_IP[i]);}
             usleep(380 * 1000); // 380ms to wait for timer thread to register that we just ran
-            strncpy(ipsignal.SIGNAL_IP[i], "", 1);
+            strncpy(ipsignal.SIGNAL_IP[i], "", sizeof(ipsignal.SIGNAL_IP[i]));
 
             submitted = true;
             break;
@@ -135,33 +125,24 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     char verif_send_str[110] = "4Ex{Y**y8wOh!T00";
     char recv_buf[110];
 
-    int recv_status;
-    recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
+    int recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
     if (recv_status == -1)
     {
-        LOGF_ERROR(thl, 0, "Error reading from socket : (TID : %ld)\n", TID);
-        LOGF_ERROR(thl, 0, "%s (%d) \n", strerror(errno), errno);
-        errno = 0;
-
+        print_recv_err(TID);
         close(clisock);
         pthread_exit(0);
     }
 
     LOGF_DEBUG(thl, 0, "Waiting for verification string from client ... ", "printf");
-
     if (strcmp(verif_recv_str, recv_buf) == 0)
     {
         LOGF_DEBUG(thl, 0, "Verified", "printf");
-
         memset(recv_buf, '\0', sizeof(recv_buf));
-        int send_status;
-        send_status = send(clisock, (void *)verif_send_str, (size_t)lengthofchar(verif_send_str), 0);
+
+        int send_status = send(clisock, (void *)verif_send_str, (size_t)lengthofchar(verif_send_str), 0);
         if (send_status == -1)
         {
-            printf("Error writing to socket : ");
-            printf("%s (Error code %d) \n", strerror(errno), errno);
-            errno = 0;
-
+            print_send_err(TID);
             close(clisock);
             pthread_exit(0);
         }
@@ -181,10 +162,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
     if (recv_status == -1)
     {
-        LOGF_ERROR(thl, 0, "Error reading from socket : (TID : %ld)\n", TID);
-        LOGF_ERROR(thl, 0, "%s (%d) \n", strerror(errno), errno);
-        errno = 0;
-
+        print_recv_err(TID);
         close(clisock);
         pthread_exit(0);
     }

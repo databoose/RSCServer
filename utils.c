@@ -58,6 +58,26 @@ int lengthofchar(char* tempstring)
     return charcount;
 }
 
+void print_recv_err(int TID)
+{
+    thread_logger *thl_recverr = new_thread_logger(debug_mode);
+    LOGF_ERROR(thl_recverr, 0, "Error reading from socket : (TID : %ld)\n", TID);
+    LOGF_ERROR(thl_recverr, 0, "%s (Error code %d) \n", strerror(errno), errno);
+    
+    errno = 0; // reset global errno
+    clear_thread_logger(thl_recverr);
+}
+
+void print_send_err(int TID)
+{
+    thread_logger *thl_senderr = new_thread_logger(debug_mode);
+    LOGF_ERROR(thl_senderr, 0, "Error writing to socket : (TID : %ld\n", TID);
+    LOGF_ERROR(thl_senderr, 0, "%s (Error code %d) \n", strerror(errno), errno)
+    
+    errno = 0;
+    clear_thread_logger(thl_senderr);
+}
+
 void thread_store(enum THREAD_STORE_OPTION opt)
 {
     FILE *fptr;

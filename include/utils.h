@@ -7,6 +7,9 @@ int update_used_ipaddr_elements();
 int showhelp();
 int usleep(__useconds_t usec); // microsecond sleep
 
+void print_recv_err(int TID);
+void print_send_err(int TID);
+
 void append_ipaddrtimer(char *THREAD_IP);
 void remove_ipaddrtimer(char *THREAD_IP);
 void append_ipaddrban(char *THREAD_IP);
