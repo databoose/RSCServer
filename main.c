@@ -61,6 +61,16 @@ struct connected ipsignal;
           ( IMPLEMENTED ) eventually cut off the timer thread after the client doesn't talk for a while (aka timeout)
 */
 
+void print_recv_err()
+{
+
+}
+
+void print_write_err()
+{
+
+}
+
 void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_seconds)
 {
     /*
@@ -93,7 +103,8 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
 }
 
 void handle_connection(void *p_clisock) // thread functions need to be a void pointer, args can be void pointer or directly referenced via & pointer when working with ints
-{    
+{
+    int TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
     thread_logger *thl = new_thread_logger(debug_mode);
     char *THREAD_IP = inet_ntoa(cli_addr.sin_addr);
 
@@ -128,7 +139,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
     if (recv_status == -1)
     {
-        LOGF_ERROR(thl, 0, "Error reading from socket : (TID : %ld)\n", (pthread_self() / 100000));
+        LOGF_ERROR(thl, 0, "Error reading from socket : (TID : %ld)\n", TID);
         LOGF_ERROR(thl, 0, "%s (%d) \n", strerror(errno), errno);
         errno = 0;
 
@@ -161,6 +172,19 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         LOGF_ERROR(thl, 0, "Not verified, verification string does not match from server to client...", "printf");
         LOGF_DEBUG(thl, 0 , "Exiting thread due to verification failure", "printf");
         clear_thread_logger(thl);
+        close(clisock);
+        pthread_exit(0);
+    }
+
+    // done with verification, now we wanna get user's hwid hash
+
+    recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
+    if (recv_status == -1)
+    {
+        LOGF_ERROR(thl, 0, "Error reading from socket : (TID : %ld)\n", TID);
+        LOGF_ERROR(thl, 0, "%s (%d) \n", strerror(errno), errno);
+        errno = 0;
+
         close(clisock);
         pthread_exit(0);
     }
