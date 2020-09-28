@@ -3,6 +3,11 @@
 #include <string.h>
 #include <mysql/mysql.h>
 
+#include <stdarg.h>
+
+#include "include/logger.h"
+#include "include/main.h"
+
 static char *host = "localhost";
 static char *user = "linkup";
 static char *pass = "linkup-1337";
@@ -12,18 +17,23 @@ unsigned short int port = 3306; // 3306 is default mysql port
 static char *unix_socket = NULL;
 unsigned int flag = 0;
 
-char query[50];
+char query[85]; // below 80 seems to cause buffer overflow from sprintf, beware
 
-void insert_query(MYSQL *conn, char* query)
+void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* value1, char* value2)
 {
+    thread_logger *thl_insertquery = new_thread_logger(debug_mode);
+    memset(query, '\0', sizeof(query));
+    sprintf(query, "INSERT INTO %s(%s,%s) values('%s','%s');", table, column1,column2, value1,value2);
+    //printf("Submitting query : %s\n", query);
 
     if(mysql_query(conn, query)) {
         printf("MySQL query error : %s\n",mysql_error(conn)); // Returns the error message for the most recently invoked MySQL function. 
     }
-    
+       
     else {
         printf("Successfully inserted\n\n");
     }
+    clear_thread_logger(thl_insertquery);
 }
 
 void print_table_contents(MYSQL *conn, char* table)
@@ -61,7 +71,8 @@ void mysql_main()
     else {
         printf("Connection successful\n\n");
     }
-    insert_query(conn,"INSERT INTO user(hwidhash_uid,ip_address) values('hashhere','iphere2');");
+    //insert_query(conn,"INSERT INTO user(hwidhash_uid,ip_address) values('hashhere','iphere2');");
+    insert_query(conn, "user", "hwidhash_uid", "ip_address", "hashhere1", "iphere1");
     print_table_contents(conn,"user");
     
     mysql_close(conn);
