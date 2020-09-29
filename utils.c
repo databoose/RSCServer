@@ -61,8 +61,8 @@ int lengthofchar(char* tempstring)
 void print_recv_err(int TID)
 {
     thread_logger *thl_recverr = new_thread_logger(debug_mode);
-    LOGF_ERROR(thl_recverr, 0, "Error reading from socket : (TID : %ld)\n", TID);
-    LOGF_ERROR(thl_recverr, 0, "%s (Error code %d) \n", strerror(errno), errno);
+    LOGF_ERROR(thl_recverr, 0, "Error reading from socket : (TID : %ld)", TID);
+    LOGF_ERROR(thl_recverr, 0, "%s (Error code %d)", strerror(errno), errno);
     
     errno = 0; // reset global errno
     clear_thread_logger(thl_recverr);
