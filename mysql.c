@@ -60,12 +60,13 @@ void print_table_contents(MYSQL *conn, char* table)
 
 void mysql_main()
 {
+    thread_logger *thl_mysqlmain = new_thread_logger(debug_mode);
     MYSQL *conn;
     conn = mysql_init(NULL); //initalizes MYSQL structs
 
     // try to connect, if fails print error
     if(!(mysql_real_connect(conn, host, user, pass, dbname, port, unix_socket, flag))) {
-        fprintf(stderr, "\nError: %s [%d]\n", mysql_error(conn), mysql_errno(conn));
+        LOGF_DEBUG(thl_mysqlmain, 0, "\nError: %s [%d]\n", stderr, mysql_error(conn), mysql_errno(conn));
         exit(1);
     }
     else {
@@ -75,5 +76,6 @@ void mysql_main()
     insert_query(conn, "user", "hwidhash_uid", "ip_address", "hashhere1", "iphere1");
     print_table_contents(conn,"user");
     
+    clear_thread_logger(thl_mysqlmain);
     mysql_close(conn);
 }
