@@ -46,7 +46,7 @@ struct connected ipsignal;
 
 /*
     TODO: 
-          1. implement mysql shit maybe?
+          1. Receive the hwid hash from client, once you have implemented it in the client to send the hash.
           
           2. deal with insert_query in mysql.c
           3. deal with print_table_contents in mysql.c
@@ -160,17 +160,21 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
     // done with verification, now we wanna get user's hwid hash
 
-    recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
-    if (recv_status == -1)
-    {
-        print_recv_err(TID);
-        close(clisock);
-        pthread_exit(0);
-    }
+    /*
+       LOGF_DEBUG(thl, 0, "Waiting for hwidhash from client ... ", "printf");
+       recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
+       if (recv_status == -1)
+       {
+           print_recv_err(TID);
+           close(clisock);
+           pthread_exit(0);
+       }
+    */
 
     mysql_main();
 
     // done with whatever we want to do, now quit
+    LOGF_DEBUG(thl, 0, "Connection thread done , closing connection (TID : %d)", TID, "printf");
     clear_thread_logger(thl);
     close(clisock);
     pthread_exit(0);
