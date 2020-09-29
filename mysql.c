@@ -66,7 +66,7 @@ void mysql_main()
 
     // try to connect, if fails print error
     if(!(mysql_real_connect(conn, host, user, pass, dbname, port, unix_socket, flag))) {
-        LOGF_DEBUG(thl_mysqlmain, 0, "\nError: %s [%d]\n", stderr, mysql_error(conn), mysql_errno(conn), "printf");
+        LOGF_DEBUG(thl_mysqlmain, 0, "Error: %s [%d]", mysql_error(conn), mysql_errno(conn), "printf");
         exit(1);
     }
     else {
