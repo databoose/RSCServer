@@ -66,12 +66,13 @@ void mysql_main()
 
     // try to connect, if fails print error
     if(!(mysql_real_connect(conn, host, user, pass, dbname, port, unix_socket, flag))) {
-        LOGF_DEBUG(thl_mysqlmain, 0, "\nError: %s [%d]\n", stderr, mysql_error(conn), mysql_errno(conn));
+        LOGF_DEBUG(thl_mysqlmain, 0, "\nError: %s [%d]\n", stderr, mysql_error(conn), mysql_errno(conn), "printf");
         exit(1);
     }
     else {
-        printf("Connection successful\n\n");
+        LOGF_DEBUG(thl_mysqlmain, 0, "MySQL successful", "printf");
     }
+
     //insert_query(conn,"INSERT INTO user(hwidhash_uid,ip_address) values('hashhere','iphere2');");
     insert_query(conn, "user", "hwidhash_uid", "ip_address", "hashhere1", "iphere1");
     print_table_contents(conn,"user");

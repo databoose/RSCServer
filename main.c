@@ -68,6 +68,7 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
         - SO_RCVTIMO, to set timeout for input operations
         - SO_SNDTIMEO, to set timeout for output operations
     */
+    thread_logger *thl_set_timeout = new_thread_logger(debug_mode);
 
     struct timeval timeout;
     timeout.tv_usec = 0;
@@ -76,7 +77,7 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
     timeout.tv_sec = timeout_input_seconds;
     if (setsockopt(servsockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
     {
-        printf("setsockopt so_rcvtimeo unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
+        LOGF_DEBUG(thl_set_timeout, 0, "setsockopt so_rcvtimeo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
         errno = 0;
     }
 
@@ -85,10 +86,11 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
         timeout.tv_sec = timeout_output_seconds;
         if (setsockopt(servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
         {
-            printf("setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
+            LOGF_DEBUG(thl_set_timeout, 0 ,"setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
             errno = 0;
         }
     }
+    clear_thread_logger(thl_set_timeout);
     //printf("Timeout set\n");
 }
 
