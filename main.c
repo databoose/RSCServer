@@ -48,8 +48,9 @@ struct connected ipsignal;
     TODO: 
           1. Receive the hwid hash from client, once you have implemented it in the client to send the hash.
           
-          2. deal with insert_query in mysql.c
-          3. deal with print_table_contents in mysql.c
+          2. check if mysql threads are actually being closed off and if you need to close them off or not.
+          3. deal with insert_query in mysql.c
+          4. deal with print_table_contents in mysql.c
           
           (somewhat kinda works) make timing out much faster and responsive, currently it only seems to timeout an IP after the flood of connections
 
