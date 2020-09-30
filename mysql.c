@@ -24,7 +24,7 @@ void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* 
     thread_logger *thl_insertquery = new_thread_logger(debug_mode);
     memset(query, '\0', sizeof(query));
     sprintf(query, "INSERT INTO %s(%s,%s) values('%s','%s');", table, column1,column2, value1,value2);
-    //printf("Submitting query : %s\n", query);
+    // printf("Submitting query : %s\n", query);
 
     if(mysql_query(conn, query)) {
         printf("MySQL query error : %s\n",mysql_error(conn)); // Returns the error message for the most recently invoked MySQL function. 
@@ -67,7 +67,6 @@ void mysql_main()
     // try to connect, if fails print error
     if(!(mysql_real_connect(conn, host, user, pass, dbname, port, unix_socket, flag))) {
         LOGF_DEBUG(thl_mysqlmain, 0, "Error: %s [%d]", mysql_error(conn), mysql_errno(conn), "printf");
-        exit(1);
     }
     else {
         LOGF_DEBUG(thl_mysqlmain, 0, "MySQL successful", "printf");
