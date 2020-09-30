@@ -69,6 +69,7 @@ int mysql_main()
         LOGF_DEBUG(thl_mysqlmain, 0, "Error: %s", mysql_error(conn), "printf");
         LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
         mysql_close(conn);
+        clear_thread_logger(thl_mysqlmain);
         return 0;
     }
     else {
@@ -90,6 +91,7 @@ int mysql_main()
     {
         LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
         mysql_close(conn);
+        clear_thread_logger(thl_mysqlmain);
         return 0;
     }
 }
