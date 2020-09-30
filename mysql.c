@@ -19,7 +19,7 @@ unsigned int flag = 0;
 
 char query[85]; // below 80 seems to cause buffer overflow from sprintf, beware
 
-void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* value1, char* value2)
+int insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* value1, char* value2)
 {
     thread_logger *thl_insertquery = new_thread_logger(debug_mode);
     memset(query, '\0', sizeof(query));
@@ -27,7 +27,7 @@ void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* 
     // printf("Submitting query : %s\n", query);
 
     if(mysql_query(conn, query)) {
-        printf("MySQL query error : %s\n",mysql_error(conn)); // Returns the error message for the most recently invoked MySQL function. 
+        LOGF_DEBUG(thl_insertquery, 0 ,"MySQL query error : %s\n",mysql_error(conn), "printf"); // Returns the error message for the most recently invoked MySQL function. 
     }
        
     else {
@@ -36,7 +36,7 @@ void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* 
     clear_thread_logger(thl_insertquery);
 }
 
-void print_table_contents(MYSQL *conn, char* table)
+int print_table_contents(MYSQL *conn, char* table)
 {
     memset(query, '\0', sizeof(query)); // zeroing out query string incase some remains
 
@@ -58,7 +58,7 @@ void print_table_contents(MYSQL *conn, char* table)
     mysql_free_result(result);
 }
 
-void mysql_main()
+int mysql_main()
 {
     thread_logger *thl_mysqlmain = new_thread_logger(debug_mode);
     MYSQL *conn;
@@ -66,16 +66,30 @@ void mysql_main()
 
     // try to connect, if fails print error
     if(!(mysql_real_connect(conn, host, user, pass, dbname, port, unix_socket, flag))) {
-        LOGF_DEBUG(thl_mysqlmain, 0, "Error: %s [%d]", mysql_error(conn), mysql_errno(conn), "printf");
+        LOGF_DEBUG(thl_mysqlmain, 0, "Error: %s", mysql_error(conn), "printf");
+        LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
+        mysql_close(conn);
+        return 0;
     }
     else {
         LOGF_DEBUG(thl_mysqlmain, 0, "MySQL successful", "printf");
     }
 
-    //insert_query(conn,"INSERT INTO user(hwidhash_uid,ip_address) values('hashhere','iphere2');");
-    insert_query(conn, "user", "hwidhash_uid", "ip_address", "hashhere1", "iphere1");
-    print_table_contents(conn,"user");
+    //printf("conn_tid : %ld\n", conn->thread_id);
+
+    if(conn->thread_id > 0)
+    {
+        insert_query(conn, "user", "hwidhash_uid", "ip_address", "hashhere1", "iphere1");
+        print_table_contents(conn,"user");
+        
+        clear_thread_logger(thl_mysqlmain);
+        mysql_close(conn);
+    }
     
-    clear_thread_logger(thl_mysqlmain);
-    mysql_close(conn);
+    else if(conn->thread_id == 0)
+    {
+        LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
+        mysql_close(conn);
+        return 0;
+    }
 }
