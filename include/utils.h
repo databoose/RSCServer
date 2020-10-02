@@ -12,6 +12,7 @@ void print_send_err(int TID);
 
 void timer_append_ipaddr(char *THREAD_IP);
 void timer_remove_ipaddr(char *THREAD_IP);
+void timer_signal_ran(char *THREAD_IP, thread_logger *logger_ptr);
 
 void banlist_append_ipaddr(char *THREAD_IP);
 void banlist_remove_ipaddr(char *THREAD_IP);
