@@ -222,7 +222,7 @@ void banlist_remove_ipaddr(char *THREAD_IP)
     {
         if (strcmp(banned_addresses[i], THREAD_IP) == 0)
         {
-            LOGF_DEBUG(banlist_remove_ipaddr, 0 ,"IP address %s removed from banlist\n", THREAD_IP, "printf");
+            LOGF_DEBUG(thl_banlist_remove_ipaddr, 0 ,"IP address %s removed from banlist\n", THREAD_IP, "printf");
             strncpy(banned_addresses[i], "", 1);
             break;
         }
@@ -234,6 +234,26 @@ void banlist_remove_ipaddr(char *THREAD_IP)
     }
 
     clear_thread_logger(thl_banlist_remove_ipaddr);
+}
+
+void timer_signal_ran(char *THREAD_IP, thread_logger *logger) // tells timer thread that the client is talking to us and has ran something
+{
+    bool submitted = false;
+
+    for (int i=0; i<=ipsignal_rawlen; i++)
+    {
+        if (strcmp(ipsignal.SIGNAL_IP[i],"") == 0) // if blank, let's populate this one
+        {
+            strncpy(ipsignal.SIGNAL_IP[i], THREAD_IP, sizeof(ipsignal.SIGNAL_IP[i]));
+            usleep(260 * 1000); // 260ms to wait for timer thread to register that we just ran
+            strncpy(ipsignal.SIGNAL_IP[i], "", sizeof(ipsignal.SIGNAL_IP[i]));
+
+            submitted = true;
+            break;
+        }
+    }
+
+    if (submitted == false) { LOGF_ERROR(logger, 0, "Could not find an empty array element in ipsignal to popluate, fixme.", "printf"); }
 }
 
 void timer_append_ipaddr(char *THREAD_IP)
