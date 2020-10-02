@@ -81,11 +81,11 @@ void print_send_err(int TID)
 void thread_store(enum THREAD_STORE_OPTION opt)
 {
     FILE *fptr;
-    thread_logger *thl_threadstore = new_thread_logger(debug_mode);
+    thread_logger *thl_thread_store = new_thread_logger(debug_mode);
 
     if (opt == create)
     {
-        LOGF_DEBUG(thl_threadstore, 0, "Creating directory for shared memory storage", "printf");
+        LOGF_DEBUG(thl_thread_store, 0, "Creating directory for shared memory storage", "printf");
         if (system("mkdir /dev/shm/linkup-varstore") <= -1)
         {
             printf("possible system() error : %s (Error code %d)\n", strerror(errno), errno);
@@ -96,24 +96,16 @@ void thread_store(enum THREAD_STORE_OPTION opt)
     if (opt == update)
     {
         int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
-        if (delfile <= -1) {
-            LOGF_ERROR(thl_threadstore, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno);
-        }
+        if (delfile <= -1) { LOGF_ERROR(thl_thread_store, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); }
 
         int deldir = remove("/dev/shm/linkup-varstore/");
-        if (deldir == -1) {
-            LOGF_ERROR(thl_threadstore, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno);
-        }
+        if (deldir == -1) { LOGF_ERROR(thl_thread_store, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); }
 
         int sysmkdir = system("mkdir /dev/shm/linkup-varstore/");
-        if (sysmkdir <= -1) {
-            LOGF_ERROR(thl_threadstore, 0, "possible system() mkdir error : %s (Error code %d)\n", strerror(errno), errno)
-        }
+        if (sysmkdir <= -1) { LOGF_ERROR(thl_thread_store, 0, "possible system() mkdir error : %s (Error code %d)\n", strerror(errno), errno); }
 
         int sysappend = system(appendcmd);
-        if (sysappend <= -1) {
-            LOGF_ERROR(thl_threadstore, 0, "possible syste() appendcmd error : %s (Error code %d)\n", strerror(errno), errno);
-        }
+        if (sysappend <= -1) { LOGF_ERROR(thl_thread_store, 0, "possible syste() appendcmd error : %s (Error code %d)\n", strerror(errno), errno); }
 
         fptr = fopen("/dev/shm/linkup-varstore/thread_count", "r"); //fopen automatically creates this file for us if it doesn't exist, if entire directory does not exist however, we need to manually create the dir (which is why we call mkdir before)
         while (!feof(fptr))                                         // segfault if no file or directory
@@ -129,7 +121,7 @@ void thread_store(enum THREAD_STORE_OPTION opt)
         fclose(fptr);
         remove("/dev/shm/linkup-varstore/");
     }
-    clear_thread_logger(thl_threadstore);
+    clear_thread_logger(thl_thread_store);
 }
 
 void sig_handler(int signo)
@@ -184,7 +176,7 @@ int update_used_ipaddr_elements()
     return cnt;
 }
 
-void append_ipaddrban(char *THREAD_IP)
+void banlist_append_ipaddr(char *THREAD_IP)
 {
     bool already_stored = false;
 
@@ -223,14 +215,14 @@ void append_ipaddrban(char *THREAD_IP)
     }
 }
 
-void remove_ipaddrban(char *THREAD_IP)
+void banlist_remove_ipaddr(char *THREAD_IP)
 {
-    thread_logger *thl_remove_ipaddrban = new_thread_logger(debug_mode);
+    thread_logger *thl_banlist_remove_ipaddr = new_thread_logger(debug_mode);
     for (int i = 0; i <= banned_rawlen; i++)
     {
         if (strcmp(banned_addresses[i], THREAD_IP) == 0)
         {
-            LOGF_DEBUG(thl_remove_ipaddrban, 0 ,"IP address %s removed from banlist\n", THREAD_IP, "printf");
+            LOGF_DEBUG(banlist_remove_ipaddr, 0 ,"IP address %s removed from banlist\n", THREAD_IP, "printf");
             strncpy(banned_addresses[i], "", 1);
             break;
         }
@@ -241,10 +233,10 @@ void remove_ipaddrban(char *THREAD_IP)
         }
     }
 
-    clear_thread_logger(thl_remove_ipaddrban);
+    clear_thread_logger(thl_banlist_remove_ipaddr);
 }
 
-void append_ipaddrtimer(char *THREAD_IP)
+void timer_append_ipaddr(char *THREAD_IP)
 {
     bool already_stored = false;
 
@@ -282,7 +274,7 @@ void append_ipaddrtimer(char *THREAD_IP)
     }
 }
 
-void remove_ipaddrtimer(char *THREAD_IP)
+void timer_remove_ipaddr(char *THREAD_IP)
 {
     for (int i = 0; i <= timer_rawlen; i++)
     {
