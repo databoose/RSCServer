@@ -20,8 +20,7 @@ void handle_timer(void *VPTR_THREAD_IP)
     {
         if (strcmp(timed_addresses[i], THREAD_IP) == 0)
         { // if IP is still in timed_address array
-            // LOGF_DEBUG(thl_timer, 0 ,"Timer thread already found for this IP, exiting thread\n","printf"); // TODO : Check if this works properly, with multiple differnt IPS,
-                                                                                                           // trying to lock this thread to only one instance of an IP
+            // LOGF_DEBUG(thl_timer, 0 ,"Timer thread already found for this IP, exiting thread\n","printf");
             clear_thread_logger(thl_timer);
             timer_thread_count--;
             pthread_exit(0);
@@ -44,6 +43,7 @@ void handle_timer(void *VPTR_THREAD_IP)
         usleep(500 * 1000); // sleep for half of a second
         block.seconds_passed = block.seconds_passed + 0.50;
         longer.seconds_passed = longer.seconds_passed + 0.50;
+
         // printf("block seconds : %.2f\n", block.seconds_passed);
         // printf("longer seconds passed : %.2f\n", longer.seconds_passed);
 
@@ -62,7 +62,7 @@ void handle_timer(void *VPTR_THREAD_IP)
         {
             if (strcmp(ipsignal.SIGNAL_IP[i], THREAD_IP) == 0)
             { 
-                block.times_ran = block.times_ran + 1;
+                block.times_ran++;
                 LOGF_DEBUG(thl_timer, 0, "Timer thread (%d) : incrementing block.times_ran : %d", TID, block.times_ran, "printf");
                 break;
             }
@@ -76,12 +76,11 @@ void handle_timer(void *VPTR_THREAD_IP)
 
         if (block.seconds_passed >= 1) // wait for a second to pass or else don't run all of these subroutine checks
         {
-            if (longer.seconds_passed >= TIMEOUT_IN)
+            if (longer.seconds_passed >= TIMEOUT_IN) // if nothing ran after specified amount of seconds
             {
-                // if no connections after specified amount of seconds, break out and exit timer thread
                 if (longer.times_ran <= 0)
                 {
-                    break; // breaks out of do loop to exit thread
+                    break; // breaks out of do loop to exit the thread
                 }
 
                 else
