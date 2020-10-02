@@ -42,18 +42,18 @@ struct connected ipsignal;
             2. using only 1 as buffer length for "" when emptying a string
             
             3. improper breaks in nested if statements and or loops
+            4. maybe mysql_main() call is single threaded when calling from inside a pthread? 
+            apparently it shouldnt happen but watch out, make sure to keep all of the memory inside mysql.c local
 */
 
 /*
     TODO: 
           1. Receive the hwid hash from client, once you have implemented it in the client to send the hash.
+          2. deal with insert_query in mysql.c
+          3. deal with print_table_contents in mysql.c
           
-          2. check if mysql threads are actually being closed off and if you need to close them off or not.
-          3. deal with insert_query in mysql.c
-          4. deal with print_table_contents in mysql.c
-          
+          (seems to be properly closed off) check if mysql threads are actually being closed off and if you need to close them off or not.
           (somewhat kinda works) make timing out much faster and responsive, currently it only seems to timeout an IP after the flood of connections
-
           ( SOMEWHAT FIXED ) somehow optimize do while loop in timer thread to not spam cpu as hard
           ( FIXED ? ) prevent currrent timer thread from dropping when it's not supposed to
           ( FIXED ? ) fix spam banning, make it happen only once when activated
@@ -97,26 +97,12 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
 
 void handle_connection(void *p_clisock) // thread functions need to be a void pointer, args can be void pointer or directly referenced via & pointer when working with ints
 {
-    int TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
+    int CONNECTIN_TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
     thread_logger *thl = new_thread_logger(debug_mode);
     char *THREAD_IP = inet_ntoa(cli_addr.sin_addr);
 
-    bool submitted = false;
-
-    for (int i=0; i<=ipsignal_rawlen; i++)
-    {
-        if (strcmp(ipsignal.SIGNAL_IP[i],"") == 0) // if blank, let's populate this one
-        {
-            strncpy(ipsignal.SIGNAL_IP[i], THREAD_IP, sizeof(ipsignal.SIGNAL_IP[i]));
-            usleep(380 * 1000); // 380ms to wait for timer thread to register that we just ran
-            strncpy(ipsignal.SIGNAL_IP[i], "", sizeof(ipsignal.SIGNAL_IP[i]));
-
-            submitted = true;
-            break;
-        }
-    }
-
-    if (submitted == false) { LOGF_ERROR(thl, 0, "Could not find an empty array element in ipsignal to popluate, fixme.", "printf"); }
+    timer_signal_ran(THREAD_IP,thl); // run this everytime an action ran
+    LOGF_DEBUG(thl, 0, "CONNECTION TID : %d", CONNECTIN_TID, "printf");
 
     int clisock = *((int *)p_clisock); // dereference pointer
     free(p_clisock);                   // we don't need the pointer anymore.
@@ -130,7 +116,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     int recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
     if (recv_status == -1)
     {
-        print_recv_err(TID);
+        print_recv_err(CONNECTIN_TID);
         close(clisock);
         pthread_exit(0);
     }
@@ -144,7 +130,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         int send_status = send(clisock, (void *)verif_send_str, (size_t)lengthofchar(verif_send_str), 0);
         if (send_status == -1)
         {
-            print_send_err(TID);
+            print_send_err(CONNECTIN_TID);
             close(clisock);
             pthread_exit(0);
         }
@@ -175,7 +161,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     mysql_main();
 
     // done with whatever we want to do, now quit
-    LOGF_DEBUG(thl, 0, "Connection thread done , closing connection (TID : %d)", TID, "printf");
+    LOGF_DEBUG(thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTIN_TID, "printf");
     clear_thread_logger(thl);
     close(clisock);
     pthread_exit(0);
