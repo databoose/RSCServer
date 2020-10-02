@@ -10,10 +10,12 @@ int usleep(__useconds_t usec); // microsecond sleep
 void print_recv_err(int TID);
 void print_send_err(int TID);
 
-void append_ipaddrtimer(char *THREAD_IP);
-void remove_ipaddrtimer(char *THREAD_IP);
-void append_ipaddrban(char *THREAD_IP);
-void remove_ipaddrban(char *THREAD_IP);
+void timer_append_ipaddr(char *THREAD_IP);
+void timer_remove_ipaddr(char *THREAD_IP);
+
+void banlist_append_ipaddr(char *THREAD_IP);
+void banlist_remove_ipaddr(char *THREAD_IP);
+
 void thread_store(enum THREAD_STORE_OPTION opt);
 void sig_handler(int signo);
 
