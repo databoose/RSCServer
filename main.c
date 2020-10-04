@@ -52,8 +52,8 @@ struct connected ipsignal;
           2. deal with insert_query in mysql.c
           3. deal with print_table_contents in mysql.c
           
-          (seems to be properly closed off) check if mysql threads are actually being closed off and if you need to close them off or not.
-          (somewhat kinda works) make timing out much faster and responsive, currently it only seems to timeout an IP after the flood of connections
+          ( seems to be properly closed off) check if mysql threads are actually being closed off and if you need to close them off or not.
+          ( FIXED, TURNED OUT TO BE CLIENT ) make timing out much faster and responsive, currently it only seems to timeout an IP after the flood of connections
           ( SOMEWHAT FIXED ) somehow optimize do while loop in timer thread to not spam cpu as hard
           ( FIXED ? ) prevent currrent timer thread from dropping when it's not supposed to
           ( FIXED ? ) fix spam banning, make it happen only once when activated
