@@ -114,32 +114,9 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     timer_signal_ran(THREAD_IP,thl); // run this everytime a user action ran
 
     // at this point, do whatever you want to here, the code below is specific to this application
-    char recv_buf[110];
     
-    LOGF_DEBUG(thl, 0, "Waiting for verification string from client ... ", "printf");
-    int recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
-    if (recv_status == -1)
-    {
-        print_recv_err(CONNECTION_TID);
-        close(clisock);
-        pthread_exit(0);
-    }
-
-    if (strcmp("Ar4#8Pzw<&M00Nk", recv_buf) == 0)
-    {
-        LOGF_DEBUG(thl, 0, "Verified", "printf");
-        memset(recv_buf, '\0', sizeof(recv_buf)); // reset recv_buf
-    }
-    else
-    {
-        LOGF_ERROR(thl, 0, "Not verified, verification string does not match from server to client...", "printf");
-        LOGF_DEBUG(thl, 0 , "Exiting thread due to verification failure", "printf");
-        clear_thread_logger(thl);
-        close(clisock);
-        pthread_exit(0);
-    }
-    safesend(clisock_ptr, "4Ex{Y**y8wOh!T00\n", CONNECTION_TID, thl);
-
+    safesend(clisock_ptr, "4Ex{Y**y8wOh!T00\n", CONNECTION_TID, thl); // telling client we got its string
+    saferecv(clisock_ptr, "Ar4#8Pzw<&M00Nk", CONNECTION_TID, thl);
     /*
     LOGF_DEBUG(thl, 0, "Waiting for hwidhash from client ... ", "printf");
     recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
@@ -159,6 +136,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     }
     memset(recv_buf, '\0', sizeof(recv_buf));
     */
+
 
     mysql_main();
 
