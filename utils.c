@@ -3,6 +3,11 @@
 #include <stdlib.h>
 #include <signal.h>
 
+// netutils
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
 // types
 #include <stdbool.h>
 #include <string.h>
@@ -10,6 +15,64 @@
 #include "include/logger.h"
 #include "include/main.h"
 #include "include/utils.h"
+
+// net utils
+
+void safesend(int * clisock, char *buf, int TID, thread_logger *logger)
+{
+    if (strchr(buf,'\n') == NULL) {
+        LOGF_ERROR(logger, 0, "safesend : no newline detected in buffer provded, emergency closing socket", "printf");
+        close(*clisock);
+        pthread_exit(0);
+    }
+
+    int send_status = send(*clisock, (void *)buf, (size_t)lengthofchar(buf), 0);
+    if (send_status == -1)
+    {
+        print_send_err(TID);
+        close(*clisock);
+        pthread_exit(0);
+    }
+}
+
+// signal handling 
+
+void sig_handler(int signo)
+{
+    thread_logger *thl_sig = new_thread_logger(debug_mode);
+
+    if (signo == SIGINT) // control+c
+    {
+        printf("\nInterrupt request detected, exiting...\n");
+        int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
+        if (delfile <= -1) { 
+            LOGF_ERROR(thl_sig, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
+        }
+
+        int deldir = remove("/dev/shm/linkup-varstore/");
+        if (deldir == -1) { 
+            LOGF_ERROR(thl_sig, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
+        }
+        clear_thread_logger(thl_sig);
+        exit(0);
+    }
+
+    if (signo == SIGSEGV) // segfault
+    {
+        LOGF_ERROR(thl_sig, 0, "Segfault caught, exiting...", "printf");
+        int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
+        if (delfile <= -1) { 
+            LOGF_ERROR(thl_sig, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
+        }
+
+        int deldir = remove("/dev/shm/linkup-varstore/");
+        if (deldir == -1) { 
+            LOGF_ERROR(thl_sig, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
+        }
+        clear_thread_logger(thl_sig);
+        exit(0);
+    }
+}
 
 // basic utils
 
@@ -122,43 +185,6 @@ void thread_store(enum THREAD_STORE_OPTION opt)
         remove("/dev/shm/linkup-varstore/");
     }
     clear_thread_logger(thl_thread_store);
-}
-
-void sig_handler(int signo)
-{
-    thread_logger *thl_sig = new_thread_logger(debug_mode);
-
-    if (signo == SIGINT) // control+c
-    {
-        printf("\nInterrupt request detected, exiting...\n");
-        int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
-        if (delfile <= -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
-        }
-
-        int deldir = remove("/dev/shm/linkup-varstore/");
-        if (deldir == -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
-        }
-        clear_thread_logger(thl_sig);
-        exit(0);
-    }
-
-    if (signo == SIGSEGV) // segfault
-    {
-        LOGF_ERROR(thl_sig, 0, "Segfault caught, exiting...", "printf");
-        int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
-        if (delfile <= -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
-        }
-
-        int deldir = remove("/dev/shm/linkup-varstore/");
-        if (deldir == -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
-        }
-        clear_thread_logger(thl_sig);
-        exit(0);
-    }
 }
 
 int update_used_ipaddr_elements() 

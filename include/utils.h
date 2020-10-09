@@ -3,6 +3,8 @@
 
 // ===========utils.c function/structs============== //
 
+void safesend(int *clisock, char *buf, int TID, thread_logger *logger);
+
 int update_used_ipaddr_elements();
 int showhelp();
 int usleep(__useconds_t usec); // microsecond sleep
