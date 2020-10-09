@@ -38,18 +38,21 @@ struct connected ipsignal;
 
 /*
     WATCH OUT FOR :
-            1. using strncpy with same exact buffer size of destination string, may cut off null teminator
-            2. using only 1 as buffer length for "" when emptying a string
+            -  using strncpy with same exact buffer size of destination string, may cut off null teminator
+            -  using only 1 as buffer length for "" when emptying a string
+            -  improper breaks in nested if statements and or loops
+
+            - please jesus for the love of god always add a fuckign newline to the end of whatever you send you fucking moron
+            you spent 5 hours trying to figure out why a readline() call in java was hanging when you never put a newline to the end
             
-            3. improper breaks in nested if statements and or loops
-            4. maybe mysql_main() call is single threaded when calling from inside a pthread? 
-            
-            5. having recv() waiting on same connection thread when client isn't already done with the servers send() call
-            apparently it shouldnt happen but watch out, make sure to keep all of the memory inside mysql.c local
+            - make sure to keep all of the memory inside mysql.c local
 */
 
 /*
     TODO: 
+          (FIXED, it was because i never added a newline to my outgoing buffer to the client, so the client never knew when the line stopped, so it hung forever until socket closure)
+          CRITICAL : CLIENT ONLY SEEMS TO GET SEND() FROM SERVER IF SOCKET CLOSES, FIX
+
           1. Receive the hwid hash from client, once you have implemented it in the client to send the hash.
           2. deal with insert_query in mysql.c
           3. deal with print_table_contents in mysql.c
@@ -99,26 +102,25 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
 
 void handle_connection(void *p_clisock) // thread functions need to be a void pointer, args can be void pointer or directly referenced via & pointer when working with ints
 {
-    int CONNECTIN_TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
-    thread_logger *thl = new_thread_logger(debug_mode);
-    char *THREAD_IP = inet_ntoa(cli_addr.sin_addr);
-
-    timer_signal_ran(THREAD_IP,thl); // run this everytime an action ran
-    LOGF_DEBUG(thl, 0, "CONNECTION TID : %d", CONNECTIN_TID, "printf");
-
     int clisock = *((int *)p_clisock); // dereference pointer
     free(p_clisock);                   // we don't need the pointer anymore.
+    int * clisock_ptr = &clisock;
+
+    int CONNECTION_TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
+    thread_logger *thl = new_thread_logger(debug_mode);
+    char *THREAD_IP = inet_ntoa(cli_addr.sin_addr);
+    LOGF_DEBUG(thl, 0, "CONNECTION TID : %d", CONNECTION_TID, "printf");
+
+    timer_signal_ran(THREAD_IP,thl); // run this everytime a user action ran
 
     // at this point, do whatever you want to here, the code below is specific to this application
-
-    char verif_send_str[110] = "4Ex{Y**y8wOh!T00";
     char recv_buf[110];
-
+    
     LOGF_DEBUG(thl, 0, "Waiting for verification string from client ... ", "printf");
     int recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
     if (recv_status == -1)
     {
-        print_recv_err(CONNECTIN_TID);
+        print_recv_err(CONNECTION_TID);
         close(clisock);
         pthread_exit(0);
     }
@@ -126,17 +128,8 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     if (strcmp("Ar4#8Pzw<&M00Nk", recv_buf) == 0)
     {
         LOGF_DEBUG(thl, 0, "Verified", "printf");
-
-        int send_status = send(clisock, (void *)verif_send_str, (size_t)lengthofchar(verif_send_str), 0);
-        if (send_status == -1)
-        {
-            print_send_err(CONNECTIN_TID);
-            close(clisock);
-            pthread_exit(0);
-        }
         memset(recv_buf, '\0', sizeof(recv_buf)); // reset recv_buf
     }
-
     else
     {
         LOGF_ERROR(thl, 0, "Not verified, verification string does not match from server to client...", "printf");
@@ -145,32 +138,32 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         close(clisock);
         pthread_exit(0);
     }
+    safesend(clisock_ptr, "4Ex{Y**y8wOh!T00\n", CONNECTION_TID, thl);
 
-    // done with verification, now we wanna get user's hwid hash
     /*
-       LOGF_DEBUG(thl, 0, "Waiting for hwidhash from client ... ", "printf");
-       recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
+    LOGF_DEBUG(thl, 0, "Waiting for hwidhash from client ... ", "printf");
+    recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
    
-       char *tmpstr = malloc(7 * sizeof(char));
-       for (int i = 0; i < 4; i++) 
-       {
-           tmpstr[i] = recv_buf[i];
-           printf("[%d] = %c\n", i, tmpstr[i]);
-       }
+    char *tmpstr = malloc(7 * sizeof(char));
+    for (int i = 0; i < 4; i++) 
+    {
+        tmpstr[i] = recv_buf[i];
+        printf("[%d] = %c\n", i, tmpstr[i]);
+    }
    
-       if (recv_status == -1)
-       {
-           print_recv_err(CONNECTIN_TID);
-           close(clisock);
-           pthread_exit(0);
-       }
-       memset(recv_buf, '\0', sizeof(recv_buf));
+    if (recv_status == -1)
+    {
+        print_recv_err(CONNECTION_TID);
+        close(clisock);
+        pthread_exit(0);
+    }
+    memset(recv_buf, '\0', sizeof(recv_buf));
     */
 
     mysql_main();
 
     // done with whatever we want to do, now quit
-    LOGF_DEBUG(thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTIN_TID, "printf");
+    LOGF_DEBUG(thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
     clear_thread_logger(thl);
     close(clisock);
     pthread_exit(0);
