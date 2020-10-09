@@ -4,6 +4,7 @@
 // ===========utils.c function/structs============== //
 
 void safesend(int *clisock, char *buf, int TID, thread_logger *logger);
+void saferecv(int *clisock, char *expected_string, int TID, thread_logger *logger);
 
 int update_used_ipaddr_elements();
 int showhelp();
