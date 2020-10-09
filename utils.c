@@ -35,6 +35,34 @@ void safesend(int * clisock, char *buf, int TID, thread_logger *logger)
     }
 }
 
+void saferecv(int * clisock, char *expected_string, int TID, thread_logger *logger)
+{
+    char buf[50];
+    
+    LOGF_DEBUG(logger, 0, "Waiting for verification string from client ... ", "printf");
+    int recv_status = recv(*clisock, (void *)buf, (size_t)sizeof(buf), 0);
+    if (recv_status == -1)
+    {
+        print_recv_err(TID);
+        close(*clisock);
+        pthread_exit(0);
+    }
+
+    if (strcmp(expected_string, buf) == 0)
+    {
+        LOGF_DEBUG(logger, 0, "Verified", "printf");
+    }
+    else
+    {
+        LOGF_ERROR(logger, 0, "Not verified, verification string does not match from server to client...", "printf");
+        LOGF_DEBUG(logger, 0 , "Exiting thread due to verification failure", "printf");
+        
+        clear_thread_logger(logger);
+        close(*clisock);
+        pthread_exit(0);
+    }
+}
+
 // signal handling 
 
 void sig_handler(int signo)
