@@ -43,6 +43,8 @@ struct connected ipsignal;
             
             3. improper breaks in nested if statements and or loops
             4. maybe mysql_main() call is single threaded when calling from inside a pthread? 
+            
+            5. having recv() waiting on same connection thread when client isn't already done with the servers send() call
             apparently it shouldnt happen but watch out, make sure to keep all of the memory inside mysql.c local
 */
 
@@ -109,10 +111,10 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
     // at this point, do whatever you want to here, the code below is specific to this application
 
-    char *verif_recv_str = "Ar4#8Pzw<&M00Nk";
     char verif_send_str[110] = "4Ex{Y**y8wOh!T00";
     char recv_buf[110];
 
+    LOGF_DEBUG(thl, 0, "Waiting for verification string from client ... ", "printf");
     int recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
     if (recv_status == -1)
     {
@@ -121,11 +123,9 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         pthread_exit(0);
     }
 
-    LOGF_DEBUG(thl, 0, "Waiting for verification string from client ... ", "printf");
-    if (strcmp(verif_recv_str, recv_buf) == 0)
+    if (strcmp("Ar4#8Pzw<&M00Nk", recv_buf) == 0)
     {
         LOGF_DEBUG(thl, 0, "Verified", "printf");
-        memset(recv_buf, '\0', sizeof(recv_buf));
 
         int send_status = send(clisock, (void *)verif_send_str, (size_t)lengthofchar(verif_send_str), 0);
         if (send_status == -1)
@@ -134,6 +134,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
             close(clisock);
             pthread_exit(0);
         }
+        memset(recv_buf, '\0', sizeof(recv_buf)); // reset recv_buf
     }
 
     else
@@ -146,16 +147,24 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     }
 
     // done with verification, now we wanna get user's hwid hash
-
     /*
        LOGF_DEBUG(thl, 0, "Waiting for hwidhash from client ... ", "printf");
        recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
+   
+       char *tmpstr = malloc(7 * sizeof(char));
+       for (int i = 0; i < 4; i++) 
+       {
+           tmpstr[i] = recv_buf[i];
+           printf("[%d] = %c\n", i, tmpstr[i]);
+       }
+   
        if (recv_status == -1)
        {
-           print_recv_err(TID);
+           print_recv_err(CONNECTIN_TID);
            close(clisock);
            pthread_exit(0);
        }
+       memset(recv_buf, '\0', sizeof(recv_buf));
     */
 
     mysql_main();
