@@ -54,8 +54,7 @@ struct connected ipsignal;
           CRITICAL : CLIENT ONLY SEEMS TO GET SEND() FROM SERVER IF SOCKET CLOSES, FIX
 
           1. Receive the hwid hash from client, once you have implemented it in the client to send the hash.
-          2. deal with insert_query in mysql.c
-          3. deal with print_table_contents in mysql.c
+          2. Deal with mysql implementation, valgrind is complaining about possible leaks related to mysql..
           
           ( seems to be properly closed off) check if mysql threads are actually being closed off and if you need to close them off or not.
           ( FIXED, TURNED OUT TO BE CLIENT ) make timing out much faster and responsive, currently it only seems to timeout an IP after the flood of connections
@@ -115,8 +114,9 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
     // at this point, do whatever you want to here, the code below is specific to this application
     
-    safesend(clisock_ptr, "4Ex{Y**y8wOh!T00\n", CONNECTION_TID, thl); // telling client we got its string
-    saferecv(clisock_ptr, "Ar4#8Pzw<&M00Nk", CONNECTION_TID, thl);
+    saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
+    safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its string
+
     /*
     LOGF_DEBUG(thl, 0, "Waiting for hwidhash from client ... ", "printf");
     recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
@@ -136,7 +136,6 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     }
     memset(recv_buf, '\0', sizeof(recv_buf));
     */
-
 
     mysql_main();
 
