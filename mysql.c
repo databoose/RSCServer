@@ -72,7 +72,7 @@ int mysql_main()
         return 0;
     }
     else {
-        LOGF_DEBUG(thl_mysqlmain, 0, "MySQL successful", "printf");
+        // LOGF_DEBUG(thl_mysqlmain, 0, "MySQL successful", "printf");
     }
 
     //printf("conn_tid : %ld\n", conn->thread_id);
