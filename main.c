@@ -114,7 +114,9 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
     // at this point, do whatever you want to here, the code below is specific to this application
     
-    saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
+    char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
+    free(ret_ptr); // frees malloced return value from saferecv
+
     safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its string
 
     /*
