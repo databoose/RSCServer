@@ -18,7 +18,7 @@
 
 // net utils
 
-void safesend(int * clisock, char *buf, int TID, thread_logger *logger)
+void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
 {
     if (strchr(buf,'\n') == NULL) {
         LOGF_ERROR(logger, 0, "safesend : no newline detected in buffer provded, emergency closing socket", "printf");
@@ -26,7 +26,7 @@ void safesend(int * clisock, char *buf, int TID, thread_logger *logger)
         pthread_exit(0);
     }
 
-    int send_status = send(*clisock, (void *)buf, (size_t)lengthofchar(buf), 0);
+    int send_status = send(*clisock, (void *)buf, (size_t)lengthofstring(buf), 0);
     if (send_status == -1)
     {
         print_send_err(TID);
@@ -35,12 +35,12 @@ void safesend(int * clisock, char *buf, int TID, thread_logger *logger)
     }
 }
 
-void saferecv(int * clisock, char *expected_string, int TID, thread_logger *logger)
+char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *expected_string)
 {
-    char buf[50];
+    char *buf = malloc((len + 1) * sizeof(char)); // +1 for '\0' character
     
-    LOGF_DEBUG(logger, 0, "Waiting for verification string from client ... ", "printf");
-    int recv_status = recv(*clisock, (void *)buf, (size_t)sizeof(buf), 0);
+    LOGF_DEBUG(logger, 0, "Waiting for message from client ... ", "printf");
+    int recv_status = recv(*clisock, (void *)buf, (len + 1), 0);
     if (recv_status == -1)
     {
         print_recv_err(TID);
@@ -48,19 +48,25 @@ void saferecv(int * clisock, char *expected_string, int TID, thread_logger *logg
         pthread_exit(0);
     }
 
-    if (strcmp(expected_string, buf) == 0)
+    if (expected_string != NULL)
     {
-        LOGF_DEBUG(logger, 0, "Verified", "printf");
+        if (strcmp(expected_string, buf) == 0)
+        {
+            LOGF_DEBUG(logger, 0, "Expected message lines up with received message (\"%s\")", buf, "printf");
+        }
+
+        else
+        {
+            LOGF_ERROR(logger, 0, "String mismatch, expected string does not match up with message from client...", "printf");
+            LOGF_DEBUG(logger, 0 , "Exiting thread due to verification failure", "printf");
+            
+            clear_thread_logger(logger);
+            close(*clisock);
+            pthread_exit(0);
+        }
     }
-    else
-    {
-        LOGF_ERROR(logger, 0, "Not verified, verification string does not match from server to client...", "printf");
-        LOGF_DEBUG(logger, 0 , "Exiting thread due to verification failure", "printf");
-        
-        clear_thread_logger(logger);
-        close(*clisock);
-        pthread_exit(0);
-    }
+
+    return buf;
 }
 
 // signal handling 
@@ -123,7 +129,7 @@ void priter(char* tempstring)
 {
     printf("PRITER : -START-");
     for (int i=0; tempstring[i]; i++) {
-      printf("%d",tempstring[i]);
+      printf("%c",tempstring[i]);
     }
     printf("-EOC-\n");
 
@@ -137,7 +143,7 @@ void priter(char* tempstring)
     }
 }
 
-int lengthofchar(char* tempstring)
+int lengthofstring(char* tempstring)
 {
     int charcount = 0;
     for (int i=0; tempstring[i]; i++) 
