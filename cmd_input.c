@@ -19,7 +19,7 @@ void cmd_input()
     {
         // LOGF_DEBUG(thl_cmdinput, 0 , "for ;; ran", "printf");
         usleep(40 * 1000);
-        char input_cmd[25];
+        char *input_cmd = malloc((50 + 1) * sizeof(char)); // +1 for '\0' character
 
         int scanfret = scanf("%s", input_cmd);
         if (scanfret > 1)
@@ -113,7 +113,7 @@ void cmd_input()
                     {
                         if (strcmp(banned_addresses[i], "") == 0)
                         { // if is blank
-                            strncpy(banned_addresses[i], input_cmd, sizeof(banned_addresses[i])); // i am assuming capping the bytes at one below actual allows strncpy to add null terminator
+                            strncpy(banned_addresses[i], input_cmd, sizeof(banned_addresses[i]));
                             LOGF_INFO(thl_cmdinput,0,"Banned IP address %s",banned_addresses[i]);
 
                             banning = false;
