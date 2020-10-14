@@ -3,8 +3,8 @@
 
 // ===========utils.c function/structs============== //
 
-void safesend(int *clisock, char *buf, int TID, thread_logger *logger);
-void saferecv(int *clisock, char *expected_string, int TID, thread_logger *logger);
+void safesend(int * clisock, int TID, thread_logger *logger, char *buf);
+char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *expected_string);
 
 int update_used_ipaddr_elements();
 int showhelp();
@@ -25,7 +25,7 @@ void sig_handler(int signo);
 
 // char info functions
 void priter(char* tempstring);
-int lengthofchar(char* tempstring);
+int lengthofstring(char* tempstring);
 
 // ===========timer.c function/structs============== //
 
