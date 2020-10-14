@@ -14,12 +14,13 @@ void cmd_input()
 {
     thread_logger *thl_cmdinput = new_thread_logger(debug_mode);
     //LOGF_DEBUG(thl_cmdinput, 0, "cmd input thread started", "printf");
+    char *input_cmd;
     
     for (;;)
     {
         // LOGF_DEBUG(thl_cmdinput, 0 , "for ;; ran", "printf");
         usleep(40 * 1000);
-        char *input_cmd = malloc((50 + 1) * sizeof(char)); // +1 for '\0' character
+        input_cmd = malloc((50 + 1) * sizeof(char)); // +1 for '\0' character
 
         int scanfret = scanf("%s", input_cmd);
         if (scanfret > 1)
@@ -167,17 +168,22 @@ void cmd_input()
             }
             exit(0);
         }
+
         else if (strcmp(input_cmd, "help") == 0 || strcmp(input_cmd, "cmds") == 0)
         {
             showhelp();
         }
+
         else
         {
             printf("Command not recognized\n");
             printf("Attempted command : %s\n", input_cmd);
         }
+
+        memset(input_cmd,0,lengthofstring(input_cmd) + 1); // +1 for null terminator
     }
 
+    free(input_cmd);
     clear_thread_logger(thl_cmdinput);
     pthread_exit(0);
 }
