@@ -27,8 +27,7 @@ void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
     }
 
     int send_status = send(*clisock, (void *)buf, (size_t)lengthofstring(buf), 0);
-    if (send_status == -1)
-    {
+    if (send_status == -1) {
         print_send_err(TID);
         close(*clisock);
         pthread_exit(0);
@@ -128,6 +127,7 @@ int showhelp()
 void priter(char* tempstring)
 {
     printf("PRITER : -START-");
+    
     for (int i=0; tempstring[i]; i++) {
       printf("%c",tempstring[i]);
     }
