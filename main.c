@@ -116,28 +116,15 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     
     char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
     free(ret_ptr); // frees malloced return value from saferecv
+    safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
 
-    safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its string
-
-    /*
-    LOGF_DEBUG(thl, 0, "Waiting for hwidhash from client ... ", "printf");
-    recv_status = recv(clisock, (void *)recv_buf, (size_t)sizeof(recv_buf), 0);
-   
-    char *tmpstr = malloc(7 * sizeof(char));
-    for (int i = 0; i < 4; i++) 
-    {
-        tmpstr[i] = recv_buf[i];
-        printf("[%d] = %c\n", i, tmpstr[i]);
+    char *hwid_string = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULL); // 16 bytes for hwid hash, + 4 bytes for prefix "ny3_"
+    if(strstr(hwid_string, "ny3_") != NULL) { LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf") }
+    else {
+        LOGF_ERROR(thl, 0, "Expected HWID but missing HWID prefix, string is %s : ", hwid_string, "printf");
     }
-   
-    if (recv_status == -1)
-    {
-        print_recv_err(CONNECTION_TID);
-        close(clisock);
-        pthread_exit(0);
-    }
-    memset(recv_buf, '\0', sizeof(recv_buf));
-    */
+    
+    free(hwid_string);
 
     mysql_main();
 
