@@ -57,7 +57,7 @@ void print_table_contents(MYSQL *conn, char* table)
     mysql_free_result(result);
 }
 
-int mysql_main()
+int mysql_main(char *ipaddr, char *hwidhash)
 {
     thread_logger *thl_mysqlmain = new_thread_logger(debug_mode);
     MYSQL *conn;
@@ -71,30 +71,26 @@ int mysql_main()
         clear_thread_logger(thl_mysqlmain);
         return 0;
     }
-    else {
-        // LOGF_DEBUG(thl_mysqlmain, 0, "MySQL successful", "printf");
-    }
 
-    //printf("conn_tid : %ld\n", conn->thread_id);
-
-    if(conn->thread_id > 0)
-    {
-        insert_query(conn, "user", "hwidhash_uid", "ip_address", "hashhere1", "iphere1");
-        print_table_contents(conn,"user");
-
-        mysql_close(conn);
-        clear_thread_logger(thl_mysqlmain);
-
-        return 1;
-    }
-    
-    else if(conn->thread_id == 0)
+    if(conn->thread_id == 0)
     {
         LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
         mysql_close(conn);
         clear_thread_logger(thl_mysqlmain);
 
         return 0;
+    }
+
+    if(conn->thread_id > 0) // if a mysql thread actually exists and we have a session
+    {
+        insert_query(conn, "users", "hwidhash", "ipaddr", 
+                                     hwidhash, ipaddr);
+        print_table_contents(conn, "users");
+
+        mysql_close(conn);
+        clear_thread_logger(thl_mysqlmain);
+
+        return 1;
     }
 
     return 1;
