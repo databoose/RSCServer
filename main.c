@@ -117,16 +117,23 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
     free(ret_ptr); // frees malloced return value from saferecv
     safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
-
+    
     char *hwid_string = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULL); // 16 bytes for hwid hash, + 4 bytes for prefix "ny3_"
-    if(strstr(hwid_string, "ny3_") != NULL) { LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf") }
+    
+    if(strstr(hwid_string, "ny3_") != NULL) { 
+        LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf");
+    }
     else {
-        LOGF_ERROR(thl, 0, "Expected HWID but missing HWID prefix, string is %s : ", hwid_string, "printf");
+        LOGF_ERROR(thl, 0, "Expected HWID but missing HWID prefix, string is : %s", hwid_string, "printf");
+        LOGF_ERROR(thl, 0, "Closing thread %d\n", CONNECTION_TID, "printf");
+
+        clear_thread_logger(thl);
+        close(clisock);
+        pthread_exit(0);
     }
     
+    mysql_main(THREAD_IP, hwid_string);
     free(hwid_string);
-
-    mysql_main();
 
     // done with whatever we want to do, now quit
     LOGF_DEBUG(thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
