@@ -27,11 +27,11 @@ void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* 
     // printf("Submitting query : %s\n", query);
 
     if(mysql_query(conn, query)) {
-        LOGF_ERROR(thl_insertquery, 0 ,"MySQL query error : %s\n",mysql_error(conn), "printf"); // Returns the error message for the most recently invoked MySQL function. 
+        printf("MySQL query error : %s\n",mysql_error(conn)); // Returns the error message for the most recently invoked MySQL function. 
     }
     
     else {
-        printf("Successfully inserted\n\n");
+        printf("Successfully inserted\n");
     }
     clear_thread_logger(thl_insertquery);
 }
@@ -65,7 +65,7 @@ int mysql_main(char *ipaddr, char *hwidhash)
 
     // try to connect, if fails print error
     if(!(mysql_real_connect(conn, host, user, pass, dbname, port, unix_socket, flag))) {
-        LOGF_DEBUG(thl_mysqlmain, 0, "Error: %s", mysql_error(conn), "printf");
+        printf("MySQL query error : %s\n",mysql_error(conn));
         LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
         mysql_close(conn);
         clear_thread_logger(thl_mysqlmain);
@@ -85,8 +85,6 @@ int mysql_main(char *ipaddr, char *hwidhash)
     {
         insert_query(conn, "users", "hwidhash", "ipaddr", 
                                      hwidhash, ipaddr);
-        print_table_contents(conn, "users");
-
         mysql_close(conn);
         clear_thread_logger(thl_mysqlmain);
 
