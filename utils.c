@@ -238,15 +238,6 @@ int update_used_ipaddr_elements()
 
 void banlist_append_ipaddr(char *THREAD_IP)
 {
-    for (int i=0; i<=ipsignal_rawlen; i++)
-    {
-        if(strcmp(ipsignal.SIGNAL_IP[i], THREAD_IP) == 0)
-        {
-            // clearing signal IP incase stuck
-            memset(ipsignal.SIGNAL_IP[i], '\0', sizeof(ipsignal.SIGNAL_IP[i]));
-        }
-    }
-
     bool already_stored = false;
 
     // to prevent making duplicates
@@ -286,15 +277,6 @@ void banlist_append_ipaddr(char *THREAD_IP)
 
 void banlist_remove_ipaddr(char *THREAD_IP)
 {
-    for (int i=0; i<=ipsignal_rawlen; i++)
-    {
-        if(strcmp(ipsignal.SIGNAL_IP[i], THREAD_IP) == 0)
-        {
-            // clearing signal IP incase stuck
-            memset(ipsignal.SIGNAL_IP[i], '\0', sizeof(ipsignal.SIGNAL_IP[i]));
-        }
-    }
-
     thread_logger *thl_banlist_remove_ipaddr = new_thread_logger(debug_mode);
     for (int i = 0; i <= banned_rawlen; i++)
     {
