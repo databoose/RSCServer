@@ -34,10 +34,10 @@ bool unbanning = false;
 
 struct sockaddr_in serv_addr;
 struct sockaddr_in cli_addr;
-struct connected ipsignal;
 
 /*
     WATCH OUT FOR :
+            -  accessing arrays out of bound
             -  using strncpy with same exact buffer size of destination string, may cut off null teminator
             -  using only 1 as buffer length for "" when emptying a string
             -  improper breaks in nested if statements and or loops
@@ -50,20 +50,18 @@ struct connected ipsignal;
 
 /*
     TODO: 
-          (FIXED, it was because i never added a newline to my outgoing buffer to the client, so the client never knew when the line stopped, so it hung forever until socket closure)
-          CRITICAL : CLIENT ONLY SEEMS TO GET SEND() FROM SERVER IF SOCKET CLOSES, FIX
-
-          1. Receive the hwid hash from client, once you have implemented it in the client to send the hash.
-          2. Deal with mysql implementation, valgrind is complaining about possible leaks related to mysql..
+          1. Deal with mysql implementation, valgrind is complaining about possible leaks related to mysql..
           
-          ( seems to be properly closed off) check if mysql threads are actually being closed off and if you need to close them off or not.
+          (FIXED, it was because i never added a newline to my outgoing buffer to the client, so the client never knew when the line stopped, so it hung forever until socket closure) CRITICAL : CLIENT ONLY SEEMS TO GET SEND() FROM SERVER IF SOCKET CLOSES, FIX
+          ( FIXED, TURNED OUT TO BE OUT OF BOUNDS MEMORY BUG ) Fix bug where timer thread constantly increments block.times_ran after a connection and a ban.
           ( FIXED, TURNED OUT TO BE CLIENT ) make timing out much faster and responsive, currently it only seems to timeout an IP after the flood of connections
           ( SOMEWHAT FIXED ) somehow optimize do while loop in timer thread to not spam cpu as hard
           ( FIXED ? ) prevent currrent timer thread from dropping when it's not supposed to
           ( FIXED ? ) fix spam banning, make it happen only once when activated
           ( FIXED ) do proper strln implementatin to prevent buffer overflow
-          ( FIXED) look out for banning fucking up the next element
+          ( FIXED ) look out for banning fucking up the next element
           ( IMPLEMENTED ) eventually cut off the timer thread after the client doesn't talk for a while (aka timeout)
+          ( IMPLEMENTED ) Receive the hwid hash from client, once you have implemented it in the client to send the hash.
 */
 
 void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_seconds)
@@ -73,6 +71,7 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
         - SO_RCVTIMO, to set timeout for input operations
         - SO_SNDTIMEO, to set timeout for output operations
     */
+   
     thread_logger *thl_set_timeout = new_thread_logger(debug_mode);
 
     struct timeval timeout;
@@ -150,14 +149,12 @@ int main(enum MAIN_OPTION opt)
     {
         // init shit
         if (signal(SIGINT, sig_handler) == SIG_ERR) { LOGF_ERROR(thl, 0, "\ncan't catch SIG", "printf");}
-        
-        memset(banned_addresses, '\0', sizeof(banned_addresses));
         memset(&cli_addr, 0, sizeof(struct sockaddr_in)); //initializing cli_addr struct
 
-        banned_rawlen = sizeof(banned_addresses) / sizeof(banned_addresses[0]);
-        ipsignal_rawlen = sizeof(ipsignal.SIGNAL_IP) / sizeof(ipsignal.SIGNAL_IP[0]);
-        timer_rawlen = sizeof(timed_addresses) / sizeof(timed_addresses[0]);
-        
+        banned_rawlen = BANNED_RAWLEN_SIZE;
+        timer_rawlen = TIMER_RAWLEN_SIZE;
+        ipsignal_rawlen = IPSIGNAL_RAWLEN_SIZE;
+
         thread_store(create);
         self_pid = getpid();
         sprintf(appendcmd, "ps hH p %d | wc -l > /dev/shm/linkup-varstore/thread_count", self_pid);
