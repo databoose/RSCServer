@@ -302,11 +302,13 @@ void timer_signal_ran(char *THREAD_IP, thread_logger *logger) // tells timer thr
 
     for (int i=0; i<=ipsignal_rawlen; i++)
     {
-        if (strcmp(ipsignal.SIGNAL_IP[i],"") == 0) // if blank, let's populate this one
+        if (strcmp(signal_addresses[i],"") == 0) // if blank, let's populate this one
         {
-            strncpy(ipsignal.SIGNAL_IP[i], THREAD_IP, sizeof(ipsignal.SIGNAL_IP[i]));
+            strncpy(signal_addresses[i], THREAD_IP, sizeof(signal_addresses[i]));
+            //LOGF_DEBUG(logger, 0, "Putting IP in signal list", "printf");
             usleep(260 * 1000); // 260ms to wait for timer thread to register that we just ran
-            strncpy(ipsignal.SIGNAL_IP[i], "", sizeof(ipsignal.SIGNAL_IP[i]));
+            strncpy(signal_addresses[i], "", sizeof(signal_addresses[i]));
+            //LOGF_DEBUG(logger, 0, "Removing IP from signal list", "printf");
 
             submitted = true;
             break;
