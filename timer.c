@@ -14,7 +14,7 @@ void handle_timer(void *VPTR_THREAD_IP)
 {
     thread_logger *thl_timer = new_thread_logger(debug_mode);
     char *THREAD_IP = (char *)VPTR_THREAD_IP;
-    timer_thread_count++;
+    timer_thread_count++; // this is to disclude from general thread count
 
     for (int i = 0; i <= timer_rawlen; i++)
     {
