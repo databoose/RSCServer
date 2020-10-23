@@ -57,7 +57,7 @@ void print_table_contents(MYSQL *conn, char* table)
     mysql_free_result(result);
 }
 
-int mysql_main(char *ipaddr, char *hwidhash)
+int mysql_main(char *hwidhash, char *ipaddr)
 {
     thread_logger *thl_mysqlmain = new_thread_logger(debug_mode);
     MYSQL *conn;
