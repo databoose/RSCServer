@@ -60,8 +60,10 @@ void handle_timer(void *VPTR_THREAD_IP)
 
         for (int i=0; i<=ipsignal_rawlen; i++)
         {
-            if (strcmp(ipsignal.SIGNAL_IP[i], THREAD_IP) == 0)
-            { 
+            // printf("[%d] : %s\n",i, signal_addresses[i]); debugging stuck elements
+            if (strcmp(signal_addresses[i], THREAD_IP) == 0)
+            {
+                printf("Thread IP : %s\n", THREAD_IP);
                 block.times_ran++;
                 LOGF_DEBUG(thl_timer, 0, "Timer thread (%d) : incrementing block.times_ran : %d", TIMER_TID, block.times_ran, "printf");
                 break;
