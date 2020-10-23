@@ -34,11 +34,6 @@ struct timerblock {
     int times_ran;
 };
 
-struct connected {
-    char SIGNAL_IP[4][16];
-};
-struct connected ipsignal;
-
 void handle_timer(void *VPTR_THREAD_IP);
 
 // =============mysql.c function/structs=============== //
