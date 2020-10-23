@@ -71,7 +71,7 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
         - SO_RCVTIMO, to set timeout for input operations
         - SO_SNDTIMEO, to set timeout for output operations
     */
-   
+
     thread_logger *thl_set_timeout = new_thread_logger(debug_mode);
 
     struct timeval timeout;
@@ -120,7 +120,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     char *hwid_string = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULL); // 16 bytes for hwid hash, + 4 bytes for prefix "ny3_"
     
     if(strstr(hwid_string, "ny3_") != NULL) { 
-        LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf");
+        // LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf");
     }
     else {
         LOGF_ERROR(thl, 0, "Expected HWID but missing HWID prefix, string is : %s", hwid_string, "printf");
