@@ -51,17 +51,22 @@ struct sockaddr_in cli_addr;
 /*
     TODO: 
           1. Deal with mysql implementation, valgrind is complaining about possible leaks related to mysql..
-          
-          (FIXED, it was because i never added a newline to my outgoing buffer to the client, so the client never knew when the line stopped, so it hung forever until socket closure) CRITICAL : CLIENT ONLY SEEMS TO GET SEND() FROM SERVER IF SOCKET CLOSES, FIX
-          ( FIXED, TURNED OUT TO BE OUT OF BOUNDS MEMORY BUG ) Fix bug where timer thread constantly increments block.times_ran after a connection and a ban.
-          ( FIXED, TURNED OUT TO BE CLIENT ) make timing out much faster and responsive, currently it only seems to timeout an IP after the flood of connections
-          ( SOMEWHAT FIXED ) somehow optimize do while loop in timer thread to not spam cpu as hard
-          ( FIXED ? ) prevent currrent timer thread from dropping when it's not supposed to
-          ( FIXED ? ) fix spam banning, make it happen only once when activated
-          ( FIXED ) do proper strln implementatin to prevent buffer overflow
-          ( FIXED ) look out for banning fucking up the next element
-          ( IMPLEMENTED ) eventually cut off the timer thread after the client doesn't talk for a while (aka timeout)
-          ( IMPLEMENTED ) Receive the hwid hash from client, once you have implemented it in the client to send the hash.
+*/
+
+/*
+    FIXED CRITICAL BUGS: 
+    
+        PROBLEM :
+            Client only seems to get send() from server if socket closes
+        
+            RESOLUTION : 
+                Never added a newline to my outgoing buffer to the client, so the client never knew when the line stopped, so it hung forever until socket closure
+      
+        PROBLEM : 
+            Timer thread constantly incrementing block.times_ran after a connection and a ban
+        
+            RESOLUTION : 
+                When it was supposed to be scanning the signal'd IP addresses, it was accessing the banned IP list because of an out of bounds memory bug.
 */
 
 void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_seconds)
