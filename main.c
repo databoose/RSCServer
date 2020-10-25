@@ -130,8 +130,13 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         close(clisock);
         pthread_exit(0);
     }
-    
+
+    // verification finished, now wait for client to tell us it is at lobby
+
     mysql_main(THREAD_IP, hwid_string);
+    char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
+    
+    free(retc);
     free(hwid_string);
 
     // done with whatever we want to do, now quit
@@ -149,16 +154,15 @@ int main(enum MAIN_OPTION opt)
     {
         // init shit
         if (signal(SIGINT, sig_handler) == SIG_ERR) { LOGF_ERROR(thl, 0, "\ncan't catch SIG", "printf");}
-        memset(&cli_addr, 0, sizeof(struct sockaddr_in)); //initializing cli_addr struct
 
         banned_rawlen = BANNED_RAWLEN_SIZE;
         timer_rawlen = TIMER_RAWLEN_SIZE;
         ipsignal_rawlen = IPSIGNAL_RAWLEN_SIZE;
 
         thread_store(create);
-        self_pid = getpid();
-        sprintf(appendcmd, "ps hH p %d | wc -l > /dev/shm/linkup-varstore/thread_count", self_pid);
+        sprintf(appendcmd, "ps hH p %d | wc -l > /dev/shm/linkup-varstore/thread_count", getpid());
 
+        memset(&cli_addr, 0, sizeof(struct sockaddr_in)); //initializing cli_addr struct
         servsockfd = socket(AF_INET, SOCK_STREAM, 0);
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_port = htons(PORT);
