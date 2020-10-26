@@ -32,6 +32,9 @@ void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
         close(*clisock);
         pthread_exit(0);
     }
+    else {
+        LOGF_DEBUG(logger, 0 , "Sent %s", buf, "printf");
+    }
 }
 
 char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *expected_string)
@@ -51,7 +54,7 @@ char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *
     {
         if (strcmp(expected_string, buf) == 0)
         {
-            LOGF_DEBUG(logger, 0, "Expected message lines up with received message (\"%s\")", buf, "printf");
+            LOGF_DEBUG(logger, 0, "Expected message lines up with received message \"%s\"", buf, "printf");
         }
 
         else
