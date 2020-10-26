@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if make; then
+if time make; then
     echo "======================"
     echo "(bash) build successful"
     echo "======================"
