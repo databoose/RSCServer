@@ -50,7 +50,7 @@ struct sockaddr_in cli_addr;
 
 /*
     TODO: 
-          1. Deal with mysql implementation, valgrind is complaining about possible leaks related to mysql..
+          1. Only send connect code once per session
 */
 
 /*
