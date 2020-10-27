@@ -38,6 +38,6 @@ void handle_timer(void *VPTR_THREAD_IP);
 
 // =============mysql.c function/structs=============== //
 
-int mysql_main(char *ipaddr, char *hwidhash);
+int mysql_register(char *ipaddr, char *hwidhash);
 
 #endif
