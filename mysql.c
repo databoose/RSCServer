@@ -57,7 +57,7 @@ void print_table_contents(MYSQL *conn, char* table)
     mysql_free_result(result);
 }
 
-int mysql_main(char *ipaddr, char *hwidhash)
+int mysql_register(char *ipaddr, char *hwidhash)
 {
     thread_logger *thl_mysqlmain = new_thread_logger(debug_mode);
     MYSQL *conn;
@@ -74,7 +74,7 @@ int mysql_main(char *ipaddr, char *hwidhash)
 
     if(conn->thread_id == 0)
     {
-        LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
+        LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong. (thread_id == 0)", "printf");
         mysql_close(conn);
         clear_thread_logger(thl_mysqlmain);
 
