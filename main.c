@@ -138,7 +138,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
     // verification finished, now wait for client to tell us it is at lobby
 
-    mysql_main(THREAD_IP, hwid_string);
+    mysql_register(THREAD_IP, hwid_string);
     free(hwid_string);
     char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
     free(retc);
