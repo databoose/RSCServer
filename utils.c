@@ -56,7 +56,6 @@ char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *
         {
             LOGF_DEBUG(logger, 0, "Expected message lines up with received message \"%s\"", buf, "printf");
         }
-
         else
         {
             LOGF_ERROR(logger, 0, "String mismatch, expected string does not match up with message from client...", "printf");
