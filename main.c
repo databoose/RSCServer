@@ -143,10 +143,9 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
     free(retc);
 
-    int connect_code_num = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
     char *malstr = malloc(11 + 2);
-    sprintf(malstr, "%d", connect_code_num);
-    strcat(malstr, "\n");
+    sprintf(malstr, "%d", rand() % (999999999 + 1 - 100000000) + 100000000);
+    strcat(malstr, "\n"); // add newline to end
 
     safesend(clisock_ptr, CONNECTION_TID, thl, malstr);
     free(malstr);
