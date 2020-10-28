@@ -30,7 +30,16 @@ void handle_timer(void *VPTR_THREAD_IP)
 
     timer_append_ipaddr(THREAD_IP);
     
-    int TIMER_TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
+    // not really needed to lock a mutex on this
+    int TIMER_TID;
+    FILE *urand_ptr;
+    urand_ptr = fopen("/dev/urandom", "rb");
+    fread(&TIMER_TID, 1, 3, urand_ptr); // read 3 bytes to fill int
+    if (TIMER_TID < 0) {
+        TIMER_TID = abs(TIMER_TID);
+    }
+    fclose(urand_ptr);
+
     LOGF_DEBUG(thl_timer, 0, "TIMER TID : %d", TIMER_TID, NULL);
 
     struct timerblock block = {.seconds_passed = 0, .times_ran = 0};
