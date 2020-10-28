@@ -18,9 +18,9 @@
 
 #define PORT 64912
 
-#define SA struct sockaddr  // cast shortener
+#define SA struct sockaddr // cast shortener
 
-#define MAX_SERVER_BACKLOG 25   // max 25 clients in lobby
+#define MAX_SERVER_BACKLOG 25 // max 25 clients in lobby
 #define MAX_GLOBAL_THREADS 60 // max 60 clients
 #define MAX_IPUSER_THREADS 5
 
@@ -95,7 +95,7 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
         timeout.tv_sec = timeout_output_seconds;
         if (setsockopt(servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
         {
-            LOGF_DEBUG(thl_set_timeout, 0 ,"setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
+            LOGF_DEBUG(thl_set_timeout, 0, "setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
             errno = 0;
         }
     }
@@ -107,27 +107,29 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 {
     int clisock = *((int *)p_clisock); // dereference pointer
     free(p_clisock);                   // we don't need the pointer anymore.
-    int * clisock_ptr = &clisock;
+    int *clisock_ptr = &clisock;
 
     int CONNECTION_TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
     thread_logger *thl = new_thread_logger(debug_mode);
     char *THREAD_IP = inet_ntoa(cli_addr.sin_addr);
     LOGF_DEBUG(thl, 0, "CONNECTION TID : %d", CONNECTION_TID, "printf");
 
-    timer_signal_ran(THREAD_IP,thl); // run this everytime a user action ran
+    timer_signal_ran(THREAD_IP, thl); // run this everytime a user action ran
 
     // at this point, do whatever you want to here, the code below is specific to this application
-    
+
     char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
-    free(ret_ptr); // frees malloced return value from saferecv
+    free(ret_ptr);                                                    // frees malloced return value from saferecv
     safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
-    
+
     char *hwid_string = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULL); // 16 bytes for hwid hash, + 4 bytes for prefix "ny3_"
-    
-    if(strstr(hwid_string, "ny3_") != NULL) { 
+
+    if (strstr(hwid_string, "ny3_") != NULL)
+    {
         // LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf");
     }
-    else {
+    else
+    {
         LOGF_ERROR(thl, 0, "Expected HWID but missing HWID prefix, string is : %s", hwid_string, "printf");
         LOGF_ERROR(thl, 0, "Closing thread %d\n", CONNECTION_TID, "printf");
 
@@ -160,11 +162,14 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 int main(enum MAIN_OPTION opt)
 {
     thread_logger *thl = new_thread_logger(debug_mode);
-    
+
     if (opt != skip_to_connloop)
     {
         // init shit
-        if (signal(SIGINT, sig_handler) == SIG_ERR) { LOGF_ERROR(thl, 0, "\ncan't catch SIG", "printf");}
+        if (signal(SIGINT, sig_handler) == SIG_ERR)
+        {
+            LOGF_ERROR(thl, 0, "\ncan't catch SIG", "printf");
+        }
 
         banned_rawlen = BANNED_RAWLEN_SIZE;
         timer_rawlen = TIMER_RAWLEN_SIZE;
@@ -227,7 +232,7 @@ int main(enum MAIN_OPTION opt)
         socklen_t cli_addr_size = sizeof(cli_addr);
 
         clisock = accept(servsockfd, (SA *)&cli_addr, &cli_addr_size); // last two parameters should fill an optionable client struct for info
-        if (clisock >= 0) // if client connects
+        if (clisock >= 0)                                              // if client connects
         {
             iparry_usedamount = update_used_ipaddr_elements();
             for (int i = 0; i <= iparry_usedamount; i++)
@@ -245,9 +250,9 @@ int main(enum MAIN_OPTION opt)
                     continue;
                 }
             }
-            
+
             thread_store(update);
-            if (thread_count >= MAX_GLOBAL_THREADS) 
+            if (thread_count >= MAX_GLOBAL_THREADS)
             {
                 LOGF_DEBUG(thl, 0, "MAX_GLOBAL_THREADS cap hit, blocking further connections until a thread is open", "printf");
                 close(clisock);
