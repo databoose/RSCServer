@@ -35,6 +35,8 @@ bool unbanning = false;
 struct sockaddr_in serv_addr;
 struct sockaddr_in cli_addr;
 
+static pthread_mutex_t rand_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /*
     WATCH OUT FOR :
             -  accessing arrays out of bound
@@ -108,12 +110,26 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     int clisock = *((int *)p_clisock); // dereference pointer
     free(p_clisock);                   // we don't need the pointer anymore.
     int *clisock_ptr = &clisock;
-
-    int CONNECTION_TID = rand() % (999999999 + 1 - 100000000) + 100000000; // (max_number + 1 - minimum_number) + minimum_number
     thread_logger *thl = new_thread_logger(debug_mode);
-    char *THREAD_IP = inet_ntoa(cli_addr.sin_addr);
-    LOGF_DEBUG(thl, 0, "CONNECTION TID : %d", CONNECTION_TID, "printf");
 
+    pthread_mutex_lock(&rand_mutex); // setting lock everytime we pull from /dev/urandom to prevent other users pulling same values
+    int CONNECTION_TID;
+    FILE *urand_ptr;
+    urand_ptr = fopen("/dev/urandom", "rb");
+    if (fread(&CONNECTION_TID, 1, sizeof(int), urand_ptr) <= 0) {
+        LOGF_ERROR(thl, 0, "fread error, returned 0 or below", "printf");
+        LOGF_ERROR(thl, 0, "%s", strerror(errno), "printf");
+    }
+    if (CONNECTION_TID < 0) {
+        CONNECTION_TID = abs(CONNECTION_TID);
+    }
+    fclose(urand_ptr);
+    pthread_mutex_unlock(&rand_mutex);
+
+    LOGF_DEBUG(thl, 0, "CONNECTION TID : %d", CONNECTION_TID, "printf");
+    //LOGF_DEBUG(thl,0, "Mutex unlocked (TID : %d)", CONNECTION_TID, "printf");
+
+    char *THREAD_IP = inet_ntoa(cli_addr.sin_addr);
     timer_signal_ran(THREAD_IP, thl); // run this everytime a user action ran
 
     // at this point, do whatever you want to here, the code below is specific to this application
@@ -144,9 +160,22 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     free(hwid_string);
     char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
     free(retc);
+    
+    pthread_mutex_lock(&rand_mutex);
+    int malint;
+    urand_ptr = fopen("/dev/urandom", "rb");
+    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0) {
+        LOGF_ERROR(thl, 0, "fread error, returned 0 or below", "printf");
+        LOGF_ERROR(thl, 0, "%s", strerror(errno), "printf");
+    }
+    if (malint < 0) {
+        malint = abs(malint);
+    }
+    fclose(urand_ptr);
+    pthread_mutex_unlock(&rand_mutex);
 
     char *malstr = malloc(11 + 2);
-    sprintf(malstr, "%d", rand() % (999999999 + 1 - 100000000) + 100000000);
+    sprintf(malstr, "%d", malint); // put integer into malstr
     strcat(malstr, "\n"); // add newline to end
 
     safesend(clisock_ptr, CONNECTION_TID, thl, malstr);
