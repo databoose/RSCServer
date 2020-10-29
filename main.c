@@ -163,7 +163,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     pthread_mutex_lock(&rand_mutex);
     int malint;
     urand_ptr = fopen("/dev/urandom", "rb");
-    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0) { // read 5 elements, all elements are the size of int
+    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0) {
         LOGF_ERROR(thl, 0, "fread error, returned 0 or below", "printf");
         LOGF_ERROR(thl, 0, "%s", strerror(errno), "printf");
     }
