@@ -139,7 +139,6 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
 
     char *hwid_string = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULL); // 16 bytes for hwid hash, + 4 bytes for prefix "ny3_"
-
     if (strstr(hwid_string, "ny3_") != NULL)
     {
         // LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf");
@@ -164,7 +163,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     pthread_mutex_lock(&rand_mutex);
     int malint;
     urand_ptr = fopen("/dev/urandom", "rb");
-    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0) {
+    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0) { // read 5 elements, all elements are the size of int
         LOGF_ERROR(thl, 0, "fread error, returned 0 or below", "printf");
         LOGF_ERROR(thl, 0, "%s", strerror(errno), "printf");
     }
@@ -175,7 +174,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     pthread_mutex_unlock(&rand_mutex);
 
     char *malstr = malloc(11 + 2);
-    sprintf(malstr, "%d", malint); // put integer into malstr
+    snprintf(malstr, 8, "%d", malint); // put only 8 bytes of malint into malstr (7 numbers)
     strcat(malstr, "\n"); // add newline to end
 
     safesend(clisock_ptr, CONNECTION_TID, thl, malstr);
