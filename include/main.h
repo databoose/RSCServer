@@ -21,11 +21,6 @@ enum MAIN_OPTION {
 int thread_count;
 int timer_thread_count;
 
-int banned_rawlen;
-int timer_rawlen;
-int ipsignal_rawlen;
-
-int iparry_usedamount;
 int servsockfd; // global so we can pass it around functions
 
 pid_t self_pid;
