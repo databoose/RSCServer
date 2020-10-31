@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h> // sleep function
+#include <errno.h>
 
 #include "include/logger.h"
 #include "include/main.h"
@@ -16,7 +17,7 @@ void handle_timer(void *VPTR_THREAD_IP)
     char *THREAD_IP = (char *)VPTR_THREAD_IP;
     timer_thread_count++; // this is to disclude from general thread count
 
-    for (int i = 0; i <= timer_rawlen; i++)
+    for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
     {
         if (strcmp(timed_addresses[i], THREAD_IP) == 0)
         { // if IP is still in timed_address array
@@ -34,7 +35,10 @@ void handle_timer(void *VPTR_THREAD_IP)
     int TIMER_TID;
     FILE *urand_ptr;
     urand_ptr = fopen("/dev/urandom", "rb");
-    fread(&TIMER_TID, 1, 3, urand_ptr); // read 3 bytes to fill int
+    if (fread(&TIMER_TID, 1, 3, urand_ptr) <= 0) { // read 3 bytes to fill int
+        LOGF_ERROR(thl_timer, 0, "fread error, returned 0 or below", "printf");
+        LOGF_ERROR(thl_timer, 0, "%s", strerror(errno), "printf");
+    }
     if (TIMER_TID < 0) {
         TIMER_TID = abs(TIMER_TID);
     }
@@ -57,7 +61,7 @@ void handle_timer(void *VPTR_THREAD_IP)
         // printf("longer seconds passed : %.2f\n", longer.seconds_passed);
 
         detected = false;
-        for (int i = 0; i <= timer_rawlen; i++)
+        for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
         {
             if (strcmp(timed_addresses[i], THREAD_IP) == 0) 
             {
@@ -67,7 +71,7 @@ void handle_timer(void *VPTR_THREAD_IP)
             }
         }
 
-        for (int i=0; i<=ipsignal_rawlen; i++)
+        for (int i=0; i<=IPSIGNAL_RAWLEN_SIZE - 1; i++)
         {
             // printf("[%d] : %s\n",i, signal_addresses[i]); debugging stuck elements
             if (strcmp(signal_addresses[i], THREAD_IP) == 0)
