@@ -48,7 +48,7 @@ void cmd_input()
 
         else if (strcmp(input_cmd, "showtimedips") == 0)
         {
-            for (int i = 0; i <= timer_rawlen; i++)
+            for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
             {
                 printf("[%d] : ", i);
                 printf("%s\n", timed_addresses[i]);
@@ -58,18 +58,7 @@ void cmd_input()
 
         else if (strcmp(input_cmd, "showbans") == 0)
         {
-            iparry_usedamount = update_used_ipaddr_elements();
-            if (iparry_usedamount <= 0)
-            {
-                printf("No banned IP addresses\n");
-                clear_thread_logger(thl_cmdinput);
-                pthread_t input_thread;
-                pthread_create(&input_thread, NULL, (void *)cmd_input, NULL);
-                pthread_exit(0);
-            }
-            printf("-------------------------\n");
-
-            for (int i = 0; i <= banned_rawlen; i++)
+            for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
             {
                 printf("[%d] : ", i);
                 printf("%s\n", banned_addresses[i]);
@@ -84,7 +73,7 @@ void cmd_input()
                 bool already_stored = false;
 
                 // to prevent making duplicates
-                for (int i = 0; i <= banned_rawlen; i++)
+                for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
                 {
                     if (strcmp(banned_addresses[i], input_cmd) == 0)
                     {
@@ -99,18 +88,31 @@ void cmd_input()
                         continue;
                     }
                 }
-
-                iparry_usedamount = update_used_ipaddr_elements();
-                if (iparry_usedamount >= banned_rawlen)
-                { // if we're full
+                
+                bool has_empty = false;
+                for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
+                {
+                    if (strcmp(banned_addresses[i], "") == 0) // if there's an empty string
+                    {
+                        has_empty = true;
+                    }
+                }
+                if (has_empty == false) // if none are empty, then we are full
+                {
                     LOGF_ERROR(thl_cmdinput, 0, "ERROR : Banned list is full", "printf");
                     banning = false; // we aint banning anymore
+
+                    // we don't exactly need to do this, we can escape other ways but this is more ram friendly
+                    clear_thread_logger(thl_cmdinput);
+                    pthread_t input_thread;
+                    pthread_create(&input_thread, NULL, (void *)cmd_input, NULL);
+                    pthread_exit(0);
                 }
             
                 if (already_stored == false)
                 {
                     // append to array
-                    for (int i = 0; i <= banned_rawlen; i++)
+                    for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++) //BANNED_RAWLEN_SIZE - 1 because the array starts at 0
                     {
                         if (strcmp(banned_addresses[i], "") == 0)
                         { // if is blank
@@ -136,7 +138,7 @@ void cmd_input()
         {
             if (unbanning == true) // once input_cmd contains the ip address
             {
-                for (int i = 0; i <= banned_rawlen; i++)
+                for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
                 {
                     if (strcmp(banned_addresses[i], input_cmd) == 0)
                     {
