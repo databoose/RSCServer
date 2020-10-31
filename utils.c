@@ -223,27 +223,12 @@ void thread_store(enum THREAD_STORE_OPTION opt)
     clear_thread_logger(thl_thread_store);
 }
 
-int update_used_ipaddr_elements() 
-{
-    int cnt = 0;
-
-    for (int i=0; i<=banned_rawlen; i++) 
-    {
-        if (strcmp(banned_addresses[i], "") != 0)  { // if is not blank
-            // printf("VALID IP : %s\n", banned_addresses[i]);
-            cnt++;
-        }
-    }
-    cnt = cnt - 1; // to start at zero, just as the actual array does
-    return cnt;
-}
-
 void banlist_append_ipaddr(char *THREAD_IP)
 {
     bool already_stored = false;
 
     // to prevent making duplicates
-    for (int i = 0; i <= banned_rawlen; i++)
+    for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
     {
         if (strcmp(banned_addresses[i], THREAD_IP) == 0)
         {
@@ -261,7 +246,7 @@ void banlist_append_ipaddr(char *THREAD_IP)
     if (already_stored == false)
     {
         // append to array
-        for (int i = 0; i <= timer_rawlen; i++)
+        for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
         {
             if (strcmp(banned_addresses[i], "") == 0)
             { // if is blank
@@ -280,7 +265,7 @@ void banlist_append_ipaddr(char *THREAD_IP)
 void banlist_remove_ipaddr(char *THREAD_IP)
 {
     thread_logger *thl_banlist_remove_ipaddr = new_thread_logger(debug_mode);
-    for (int i = 0; i <= banned_rawlen; i++)
+    for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
     {
         if (strcmp(banned_addresses[i], THREAD_IP) == 0)
         {
@@ -302,7 +287,7 @@ void timer_signal_ran(char *THREAD_IP, thread_logger *logger) // tells timer thr
 {
     bool submitted = false;
 
-    for (int i=0; i<=ipsignal_rawlen; i++)
+    for (int i=0; i<=IPSIGNAL_RAWLEN_SIZE - 1; i++)
     {
         if (strcmp(signal_addresses[i],"") == 0) // if blank, let's populate this one
         {
@@ -325,7 +310,7 @@ void timer_append_ipaddr(char *THREAD_IP)
     bool already_stored = false;
 
     // to prevent making duplicates
-    for (int i = 0; i <= timer_rawlen; i++)
+    for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
     {
         if (strcmp(timed_addresses[i], THREAD_IP) == 0)
         {
@@ -342,7 +327,7 @@ void timer_append_ipaddr(char *THREAD_IP)
     if (already_stored == false)
     {
         // append to array
-        for (int i = 0; i <= timer_rawlen; i++)
+        for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
         {
             if (strcmp(timed_addresses[i], "") == 0)
             { // if is blank
@@ -360,7 +345,7 @@ void timer_append_ipaddr(char *THREAD_IP)
 
 void timer_remove_ipaddr(char *THREAD_IP)
 {
-    for (int i = 0; i <= timer_rawlen; i++)
+    for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
     {
         if (strcmp(timed_addresses[i], THREAD_IP) == 0)
         {
