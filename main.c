@@ -175,7 +175,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
     char *malstr = malloc(11 + 2);
     snprintf(malstr, 8, "%d", malint); // put only 8 bytes of malint into malstr (7 numbers)
-    strcat(malstr, "\n"); // add newline to end
+    strcat(malstr, "\n"); // add newline to end (so we can actually send this to client)
 
     safesend(clisock_ptr, CONNECTION_TID, thl, malstr);
     free(malstr);
@@ -198,10 +198,6 @@ int main(enum MAIN_OPTION opt)
         {
             LOGF_ERROR(thl, 0, "\ncan't catch SIG", "printf");
         }
-
-        banned_rawlen = BANNED_RAWLEN_SIZE;
-        timer_rawlen = TIMER_RAWLEN_SIZE;
-        ipsignal_rawlen = IPSIGNAL_RAWLEN_SIZE;
 
         thread_store(create);
         sprintf(appendcmd, "ps hH p %d | wc -l > /dev/shm/linkup-varstore/thread_count", getpid());
@@ -262,8 +258,7 @@ int main(enum MAIN_OPTION opt)
         clisock = accept(servsockfd, (SA *)&cli_addr, &cli_addr_size); // last two parameters should fill an optionable client struct for info
         if (clisock >= 0)                                              // if client connects
         {
-            iparry_usedamount = update_used_ipaddr_elements();
-            for (int i = 0; i <= iparry_usedamount; i++)
+            for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++) // BANNED_RAWLEN_SIZE - 1 because we want to start at element 0 through the banned_addresses arrays
             {
                 if (strcmp(inet_ntoa(cli_addr.sin_addr), banned_addresses[i]) == 0)
                 {
