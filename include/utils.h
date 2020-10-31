@@ -6,7 +6,6 @@
 void safesend(int * clisock, int TID, thread_logger *logger, char *buf);
 char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *expected_string);
 
-int update_used_ipaddr_elements();
 int showhelp();
 int usleep(__useconds_t usec); // microsecond sleep
 
