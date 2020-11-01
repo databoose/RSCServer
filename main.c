@@ -262,7 +262,7 @@ int main(enum MAIN_OPTION opt)
             {
                 if (strcmp(inet_ntoa(cli_addr.sin_addr), banned_addresses[i]) == 0)
                 {
-                    LOGF_DEBUG(thl, 0, "Banned IP address %s attempted to connect, refusing to open connection thread", inet_ntoa(cli_addr.sin_addr));
+                    LOGF_WARN(thl, 0, "Banned IP address %s attempted to connect, refusing to open connection thread", inet_ntoa(cli_addr.sin_addr));
                     close(clisock);
                     clear_thread_logger(thl);
                     main(skip_to_connloop); // we escape this forloop and the code below doesn't run
