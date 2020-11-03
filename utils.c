@@ -58,7 +58,7 @@ char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *
         }
         else
         {
-            LOGF_ERROR(logger, 0, "String mismatch, expected string does not match up with message from client...", "printf");
+            LOGF_ERROR(logger, 0, "String mismatch, expected string does not match up with message \"%s\" from client...", buf, "printf");
             LOGF_DEBUG(logger, 0 , "Exiting thread due to verification failure", "printf");
             
             clear_thread_logger(logger);
