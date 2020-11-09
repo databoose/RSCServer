@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/time.h>
 
 #include <signal.h>
 #include <sys/types.h>
@@ -14,10 +15,7 @@
 #include <stdbool.h>
 #include <dirent.h>
 
-#include <sys/time.h>
-
 #define PORT 64912
-
 #define SA struct sockaddr // cast shortener
 
 #define MAX_SERVER_BACKLOG 25 // max 25 clients in lobby
@@ -36,40 +34,6 @@ struct sockaddr_in serv_addr;
 struct sockaddr_in cli_addr;
 
 static pthread_mutex_t rand_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/*
-    WATCH OUT FOR :
-            -  accessing arrays out of bound
-            -  using strncpy with same exact buffer size of destination string, may cut off null teminator
-            -  using only 1 as buffer length for "" when emptying a string
-            -  improper breaks in nested if statements and or loops
-
-            - please jesus for the love of god always add a fuckign newline to the end of whatever you send you fucking moron
-            you spent 5 hours trying to figure out why a readline() call in java was hanging when you never put a newline to the end
-            
-            - make sure to keep all of the memory inside mysql.c local
-*/
-
-/*
-    TODO: 
-          1. Only send connect code once per session
-*/
-
-/*
-    FIXED CRITICAL BUGS: 
-    
-        PROBLEM :
-            Client only seems to get send() from server if socket closes
-        
-            RESOLUTION : 
-                Never added a newline to my outgoing buffer to the client, so the client never knew when the line stopped, so it hung forever until socket closure
-      
-        PROBLEM : 
-            Timer thread constantly incrementing block.times_ran after a connection and a ban
-        
-            RESOLUTION : 
-                When it was supposed to be scanning the signal'd IP addresses, it was accessing the banned IP list because of an out of bounds memory bug.
-*/
 
 void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_seconds)
 {
@@ -159,7 +123,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     free(hwid_string);
     char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
     free(retc);
-    
+
     pthread_mutex_lock(&rand_mutex);
     int malint;
     urand_ptr = fopen("/dev/urandom", "rb");
@@ -206,7 +170,7 @@ int main(enum MAIN_OPTION opt)
         servsockfd = socket(AF_INET, SOCK_STREAM, 0);
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_port = htons(PORT);
-        serv_addr.sin_addr.s_addr = inet_addr("10.0.0.224");
+        serv_addr.sin_addr.s_addr = inet_addr("10.0.0.225");
 
         if (setsockopt(servsockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         {
@@ -221,9 +185,9 @@ int main(enum MAIN_OPTION opt)
         if (bind_status == -1)
         {
             LOGF_ERROR(thl, 0, "Bind unsuccessful : %s (Error code %d)", strerror(errno), errno);
-            if (errno == 99)
-            {
+            if (errno == 99) {
                 LOGF_ERROR(thl, 0, "Wrong IP address, or system not connected to router perhaps?", NULL);
+                LOGF_ERROR(thl, 0, "Check if the configured IP in main.c is incorrect, IP could have changed...",NULL);
                 exit(0);
             }
 
