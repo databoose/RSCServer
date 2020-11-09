@@ -246,7 +246,7 @@ void banlist_append_ipaddr(char *THREAD_IP)
     if (already_stored == false)
     {
         // append to array
-        for (int i = 0; i <= TIMER_RAWLEN_SIZE - 1; i++)
+        for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
         {
             if (strcmp(banned_addresses[i], "") == 0)
             { // if is blank
