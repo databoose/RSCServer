@@ -1,0 +1,13 @@
+FIXED CRITICAL BUGS: 
+
+     PROBLEM :
+         Client only seems to get send() from server if socket closes
+        
+         RESOLUTION : 
+             Never added a newline to my outgoing buffer to the client, so the client never knew when the line stopped, so it hung forever until socket closure
+      
+     PROBLEM : 
+         Timer thread constantly incrementing block.times_ran after a connection and a ban
+        
+         RESOLUTION : 
+              When it was supposed to be scanning the signal'd IP addresses, it was accessing the banned IP list because of an out of bounds memory bug.
