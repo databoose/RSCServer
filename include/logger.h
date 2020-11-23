@@ -33,6 +33,7 @@
 
 #define LOGGER_VERSION '0.0.2-rc1'
 
+extern bool debug_mode;
 /*!
  * @brief strips leading path from __FILE__
  */
