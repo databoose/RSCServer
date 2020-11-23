@@ -34,7 +34,6 @@ char timed_addresses[35][16];
 // these externs are defined and changed as needed in main.c (primarily)
 extern bool banning;
 extern bool unbanning;
-extern bool debug_mode;
 
 // cmd_input.c
 void cmd_input();
