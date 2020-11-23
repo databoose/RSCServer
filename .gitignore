@@ -14,4 +14,5 @@ main.o
 mysql.o
 timer.o
 utils.o
+session_info.o
 debug_builds/massif.out.53314
