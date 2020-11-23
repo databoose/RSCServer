@@ -1,6 +1,6 @@
-OBJS	= main.o mysql.o colors.o logger.o utils.o cmd_input.o timer.o
-SOURCE	= main.c mysql.c colors.c logger.c utils.c cmd_input.c timer.c
-HEADER	= 
+OBJS	= main.o mysql.o colors.o logger.o utils.o cmd_input.o timer.o session_info.o
+SOURCE	= main.c mysql.c colors.c logger.c utils.c cmd_input.c timer.c session_info.c
+HEADER	=
 OUT	= RSC_Server
 CC	 = ccache gcc # for compiler caching
 
@@ -12,6 +12,9 @@ all: $(OBJS)
 
 main.o: main.c
 	$(CC) $(FLAGS) main.c
+
+session_info.o: session_info.c
+	$(CC) $(FLAGS) session_info.c
 
 mysql.o: mysql.c
 	$(CC) $(FLAGS) mysql.c
