@@ -25,8 +25,9 @@
 #include "include/logger.h"
 #include "include/main.h"
 #include "include/utils.h"
+#include "include/session_info.h"
 
-bool debug_mode = true;
+bool debug_mode = true; // we also want debug logs, only disable this when doing live deployment
 bool banning = false;
 bool unbanning = false;
 
@@ -43,7 +44,7 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
         - SO_SNDTIMEO, to set timeout for output operations
     */
 
-    thread_logger *thl_set_timeout = new_thread_logger(debug_mode);
+    thread_logger* thl_set_timeout = new_thread_logger(debug_mode);
 
     struct timeval timeout;
     timeout.tv_usec = 0;
@@ -158,8 +159,8 @@ int main(enum MAIN_OPTION opt)
     if (opt != skip_to_connloop)
     {
         // init shit
-        if (signal(SIGINT, sig_handler) == SIG_ERR)
-        {
+        NULLSTRING = "Z&fw&pok5o!itKU!s";
+        if (signal(SIGINT, sig_handler) == SIG_ERR) {
             LOGF_ERROR(thl, 0, "\ncan't catch SIG", "printf");
         }
 
