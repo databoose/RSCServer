@@ -35,4 +35,8 @@ timer.o: timer.c
 	$(CC) $(FLAGS) timer.c
 
 clean:
-	rm -f $(OBJS) $(OUT)
+	rm -f $(OUT); \
+	cd obj; \
+	rm -rf $(OBJS); \
+	cd -; \
+	rm -rf $(OBJS); \
