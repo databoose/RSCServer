@@ -53,9 +53,9 @@ void handle_timer(void *VPTR_THREAD_IP)
 
     do
     {
-        usleep(500 * 1000); // sleep for half of a second
-        block.seconds_passed = block.seconds_passed + 0.50;
-        longer.seconds_passed = longer.seconds_passed + 0.50;
+        usleep(250 * 1000); // sleep for quarter of a second
+        block.seconds_passed = block.seconds_passed + 0.25;
+        longer.seconds_passed = longer.seconds_passed + 0.25;
 
         // printf("block seconds : %.2f\n", block.seconds_passed);
         // printf("longer seconds passed : %.2f\n", longer.seconds_passed);
