@@ -2,29 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/types.h> // for pid_t and shit
 
+#include "include/main.h"
 #include "include/session_info.h"
 #include "include/logger.h"
 
-#define NO_ID 24706 // this is basically a unique null for when we have to pass the ID but don't want to
-
-struct SessionInfoNode {
-    char *THREAD_IP;
-    char *HWID;
-    char *CONNECTION_TID;
-
-    char *CONNECT_CODE;
-    char *STATUS;
-    int ID;
-
-    struct SessionInfoNode* NEXT;
-    struct SessionInfoNode* PREV;
-};
-
-typedef struct SessionInfoNode SessionInfoNode_T;
 int node_index = 0;
 
-void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, char *CONNECTION_TID, char *CONNECT_CODE, char *STATUS) {
+void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, int CONNECTION_TID, char *CONNECT_CODE, state STATUS) {
     node_index++;
     if (node_index > MAX_SESSION_STRUCTS) {
         thread_logger* session_info_thl = new_thread_logger(debug_mode);
@@ -37,11 +23,11 @@ void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, char *C
         new_node->THREAD_IP = THREAD_IP;
     if (strcmp(HWID, NULLSTRING) != 0)
         new_node->HWID = HWID;
-    if (strcmp(CONNECTION_TID, NULLSTRING) != 0)
+    if (CONNECTION_TID != NO_CONNECTION_TID)
         new_node->CONNECTION_TID = CONNECTION_TID;
     if (strcmp(CONNECT_CODE, NULLSTRING) != 0)
         new_node->CONNECT_CODE = CONNECT_CODE;
-    if (strcmp(STATUS, NULLSTRING) != 0)
+    if (STATUS != NO_STATUS)
         new_node->STATUS = STATUS;
     new_node->ID = node_index;
 
@@ -142,10 +128,13 @@ void print_list(SessionInfoNode_T* head) {
         printf("\n");
         printf("THREAD IP : %s \n", current->THREAD_IP);
         printf("HWID : %s \n", current->HWID);
-        printf("CONNECTION_TID : %s \n", current->CONNECTION_TID);
+        printf("CONNECTION_TID : %d \n", current->CONNECTION_TID);
 
         printf("CONNECT_CODE : %s \n", current->CONNECT_CODE);
-        printf("STATUS : %s \n", current->STATUS);
+        if(current->STATUS == READY)
+            printf("STAUTS : READY \n");
+        else if(current->STATUS == BUSY)
+            printf("STATUS : BUSY \n");
         printf("ID : %d \n", current->ID);
         
         current = current->NEXT;
@@ -165,7 +154,7 @@ int session_info_main() {
        add_node(&head, "test_thread_ip5", "test_hwid5", "test_connectiontid5", NULLSTRING, NULLSTRING);
        add_node(&head, "test_thread_ip2", "test_hwid2", "test_connectiontid2", "1234", NULLSTRING);
     
-       tmp = find_node(head, "1234", NO_IP_ADDRESS, NO_ID);
+       tmp = find_node(head, "1234", NULLSTRING, NULLSTRING);
        if (tmp != NULL) {
            printf("ID of node containing 1234 : %d\n", tmp->ID);
            printf("IP Address : %s\n", tmp->THREAD_IP);
