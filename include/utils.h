@@ -22,7 +22,8 @@ void banlist_remove_ipaddr(char *THREAD_IP);
 void thread_store(enum THREAD_STORE_OPTION opt);
 void sig_handler(int signo);
 
-// char info functions
+// char functions
+char *strremove(char *str, const char *sub);
 void priter(char* tempstring);
 int lengthofstring(char* tempstring);
 
