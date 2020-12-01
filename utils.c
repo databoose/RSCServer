@@ -15,6 +15,7 @@
 #include "include/logger.h"
 #include "include/main.h"
 #include "include/utils.h"
+#include "include/session_info.h"
 
 // net utils
 
@@ -50,7 +51,7 @@ char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *
         pthread_exit(0);
     }
 
-    if (expected_string != NULL)
+    if (strcmp(expected_string, NULLSTRING) != 0) // if something is passed here
     {
         if (strcmp(expected_string, buf) == 0)
         {
@@ -124,6 +125,21 @@ int showhelp()
     printf("\n");
 
     return 0;
+}
+
+char *strremove(char *str, const char *sub) 
+{
+    char *p, *q, *r;
+    if ((q = r = strstr(str, sub)) != NULL) {
+        size_t len = strlen(sub);
+        while ((r = strstr(p = r + len, sub)) != NULL) {
+            while (p < r)
+                *q++ = *p++;
+        }
+        while ((*q++ = *p++) != '\0')
+            continue;
+    }
+    return str;
 }
 
 void priter(char* tempstring)
