@@ -35,6 +35,9 @@ struct sockaddr_in serv_addr;
 struct sockaddr_in cli_addr;
 
 static pthread_mutex_t rand_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t linked_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+SessionInfoNode_T* LIST_HEAD;
 
 void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_seconds)
 {
@@ -98,19 +101,18 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     timer_signal_ran(THREAD_IP, thl); // run this everytime a user action ran
 
     // at this point, do whatever you want to here, the code below is specific to this application
-
     char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
     free(ret_ptr);                                                    // frees malloced return value from saferecv
     safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
 
-    char *hwid_string = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULL); // 16 bytes for hwid hash, + 4 bytes for prefix "ny3_"
-    if (strstr(hwid_string, "ny3_") != NULL)
+    char *HWID = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULLSTRING);
+    if (strstr(HWID, "ny3_") != NULL)
     {
-        // LOGF_DEBUG(thl, 0, "Client HWID : %s\n", hwid_string, "printf");
+        LOGF_DEBUG(thl, 0, "Client HWID : %s\n", HWID, "printf");
     }
     else
     {
-        LOGF_ERROR(thl, 0, "Expected HWID but missing HWID prefix, string is : %s", hwid_string, "printf");
+        LOGF_ERROR(thl, 0, "Expected HWID but missing HWID prefix, string is : %s", HWID, "printf");
         LOGF_ERROR(thl, 0, "Closing thread %d\n", CONNECTION_TID, "printf");
 
         clear_thread_logger(thl);
@@ -120,8 +122,8 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
     // verification finished, now wait for client to tell us it is at lobby
 
-    mysql_register(THREAD_IP, hwid_string);
-    free(hwid_string);
+    mysql_register(THREAD_IP, HWID);
+    free(HWID);
     char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
     free(retc);
 
@@ -138,12 +140,31 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     fclose(urand_ptr);
     pthread_mutex_unlock(&rand_mutex);
 
-    char *malstr = malloc(11 + 2);
-    snprintf(malstr, 8, "%d", malint); // put only 8 bytes of malint into malstr (7 numbers)
-    strcat(malstr, "\n"); // add newline to end (so we can actually send this to client)
+    char *CONNECTION_CODE = malloc(11 + 2);
+    snprintf(CONNECTION_CODE, 8, "%d", malint); // put only 8 bytes of malint into CONNECTION_CODE (7 numbers)
+    strcat(CONNECTION_CODE, "\n");
 
-    safesend(clisock_ptr, CONNECTION_TID, thl, malstr);
-    free(malstr);
+    safesend(clisock_ptr, CONNECTION_TID, thl, CONNECTION_CODE);
+    add_node(&LIST_HEAD, THREAD_IP, HWID, CONNECTION_TID, CONNECTION_CODE, READY);
+    free(CONNECTION_CODE);
+
+    char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 26, NULLSTRING);
+    if (strcmp(clientmsg, "done") == 0) {
+        LOGF_DEBUG(thl, 0, "Client told us to close connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
+    }
+    else if (strstr(clientmsg, "connectto_") != NULL) {
+        char *TARGET_CODE = strremove(clientmsg, "connectto_");
+        printf("target code : %s\n", TARGET_CODE);
+
+        SessionInfoNode_T* TARGET_NODE;
+        TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NO_ID);
+        if (TARGET_NODE != NULL) {
+           printf("ID of node containing connect code %s : %d\n", TARGET_CODE, TARGET_NODE->ID);
+           printf("IP Address : %s\n", TARGET_NODE->THREAD_IP);
+       }
+       print_list(LIST_HEAD);
+    }
+    free(clientmsg);
 
     // done with whatever we want to do, now quit
     LOGF_DEBUG(thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
@@ -159,6 +180,7 @@ int main(enum MAIN_OPTION opt)
     if (opt != skip_to_connloop)
     {
         // init shit
+        LIST_HEAD = NULL;
         NULLSTRING = "Z&fw&pok5o!itKU!s";
         if (signal(SIGINT, sig_handler) == SIG_ERR) {
             LOGF_ERROR(thl, 0, "\ncan't catch SIG", "printf");
