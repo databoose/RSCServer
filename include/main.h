@@ -18,6 +18,7 @@ enum MAIN_OPTION {
 };
 
 // main.c stuff
+char* NULLSTRING;
 int thread_count;
 int timer_thread_count;
 
