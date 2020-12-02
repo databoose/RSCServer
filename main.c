@@ -123,7 +123,6 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     // verification finished, now wait for client to tell us it is at lobby
 
     mysql_register(THREAD_IP, HWID);
-    free(HWID);
     char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
     free(retc);
 
@@ -140,13 +139,14 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     fclose(urand_ptr);
     pthread_mutex_unlock(&rand_mutex);
 
-    char *CONNECTION_CODE = malloc(11 + 2);
-    snprintf(CONNECTION_CODE, 8, "%d", malint); // put only 8 bytes of malint into CONNECTION_CODE (7 numbers)
-    strcat(CONNECTION_CODE, "\n");
+    char *CONNECT_CODE = malloc(11 + 2);
+    snprintf(CONNECT_CODE, 8, "%d", malint); // put only 8 bytes of malint into CONNECT_CODE (7 numbers)
+    strcat(CONNECT_CODE, "\n");
 
-    safesend(clisock_ptr, CONNECTION_TID, thl, CONNECTION_CODE);
-    add_node(&LIST_HEAD, THREAD_IP, HWID, CONNECTION_TID, CONNECTION_CODE, READY);
-    free(CONNECTION_CODE);
+    safesend(clisock_ptr, CONNECTION_TID, thl, CONNECT_CODE);
+    add_node(&LIST_HEAD, THREAD_IP, HWID, CONNECTION_TID, CONNECT_CODE, READY);
+    free(CONNECT_CODE);
+    free(HWID);
 
     char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 26, NULLSTRING);
     if (strcmp(clientmsg, "done") == 0) {
