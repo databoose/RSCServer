@@ -132,7 +132,7 @@ void print_list(SessionInfoNode_T* head) {
 
         printf("CONNECT_CODE : %s \n", current->CONNECT_CODE);
         if(current->STATUS == READY)
-            printf("STAUTS : READY \n");
+            printf("STATUS : READY \n");
         else if(current->STATUS == BUSY)
             printf("STATUS : BUSY \n");
         printf("ID : %d \n", current->ID);
