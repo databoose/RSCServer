@@ -38,11 +38,11 @@ void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
     }
 }
 
-char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char *expected_string)
+char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char* type, char *expected_string)
 {
     char *buf = malloc((len + 1) * sizeof(char)); // +1 for '\0' character
     
-    LOGF_DEBUG(logger, 0, "Waiting for message from client ... ", "printf");
+    LOGF_DEBUG(logger, 0, "Waiting for %s message from client ... ", type, "printf");
     int recv_status = recv(*clisock, (void *)buf, (len + 1), 0);
     if (recv_status == -1)
     {

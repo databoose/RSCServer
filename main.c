@@ -101,11 +101,11 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     timer_signal_ran(THREAD_IP, thl); // run this everytime a user action ran
 
     // at this point, do whatever you want to here, the code below is specific to this application
-    char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "Ar4#8Pzw<&M00Nk");
+    char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "verification", "Ar4#8Pzw<&M00Nk");
     free(ret_ptr);                                                    // frees malloced return value from saferecv
     safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
 
-    char *HWID = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, NULLSTRING);
+    char *HWID = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, "HWID", NULLSTRING);
     if (strstr(HWID, "ny3_") != NULL)
     {
         LOGF_DEBUG(thl, 0, "Client HWID : %s\n", HWID, "printf");
@@ -123,7 +123,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     // verification finished, now wait for client to tell us it is at lobby
 
     mysql_register(THREAD_IP, HWID);
-    char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby");
+    char *retc = saferecv(clisock_ptr, CONNECTION_TID, thl, lengthofstring("inlobby"), "inlobby", "lobby notification");
     free(retc);
 
     pthread_mutex_lock(&rand_mutex);
@@ -148,7 +148,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     free(CONNECT_CODE);
     free(HWID);
 
-    char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 26, NULLSTRING);
+    char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 45, NULLSTRING, "client message");
     if (strcmp(clientmsg, "done") == 0) {
         LOGF_DEBUG(thl, 0, "Client told us to close connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     }
