@@ -5,6 +5,5 @@ WATCH OUT FOR :
             -  improper breaks in nested if statements and or loops
 
             - always add a newline to the end of whatever you send to the client, otherwise the client will be infinitely waiting until socket close, safesend() should prevent this but keep an eye out for this issue.
-            you spent 5 hours trying to figure out why a readline() call in java was hanging when you never put a newline to the end
             
             - make sure to keep all of the memory inside mysql.c local
