@@ -77,7 +77,7 @@ void handle_timer(void *VPTR_THREAD_IP)
             if (strcmp(signal_addresses[i], THREAD_IP) == 0)
             {
                 block.times_ran++;
-                LOGF_DEBUG(thl_timer, 0, "Timer thread (%d) : incrementing block.times_ran : %d", TIMER_TID, block.times_ran, "printf");
+                LOGF_DEBUG(thl_timer, 0, "Timer thread (%d) : Action registered in temporary time block : %d", TIMER_TID, block.times_ran, "printf");
                 break;
             }
             
