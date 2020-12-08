@@ -144,11 +144,15 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     strcat(CONNECT_CODE, "\n");
 
     safesend(clisock_ptr, CONNECTION_TID, thl, CONNECT_CODE);
+    // CONNECT_CODE and HWID are fine normally in memory, but when we insert it into the node, for some reason it gets corrupted...
     add_node(&LIST_HEAD, THREAD_IP, HWID, CONNECTION_TID, CONNECT_CODE, READY);
     free(CONNECT_CODE);
     free(HWID);
 
-    char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 45, "client message",NULLSTRING); // we don't expect a specific string here
+    // TODO : Fix last number missing in THREAD_IP insertion (presumably in session_info.c)
+
+    char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 24, "client message",NULLSTRING);
+    printf("clientmsg : %s\n", clientmsg);
     if (strcmp(clientmsg, "done") == 0) {
         LOGF_DEBUG(thl, 0, "Client told us to close connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     }
