@@ -11,11 +11,11 @@
     } state;
 
     struct SessionInfoNode {
-        char *THREAD_IP;
-        char *HWID;
+        char THREAD_IP[16];
+        char HWID[19];
         int CONNECTION_TID;
 
-        char *CONNECT_CODE;
+        char CONNECT_CODE[9];
         state STATUS;
         int ID;
 
