@@ -1,8 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define TIMEOUT_IN 25 // seconds
-#define TIMEOUT_OUT 25
+#define TIMEOUT_IN 420 // seconds
+#define TIMEOUT_OUT 420
 
 #define BANNED_RAWLEN_SIZE 18
 #define TIMER_RAWLEN_SIZE 35
