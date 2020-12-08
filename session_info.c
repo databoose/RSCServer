@@ -19,16 +19,22 @@ void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, int CON
         return;
     }
     SessionInfoNode_T* new_node = (SessionInfoNode_T*) malloc(sizeof(SessionInfoNode_T));
-    if (strcmp(THREAD_IP, NULLSTRING) != 0)// if not null
-        new_node->THREAD_IP = THREAD_IP;
-    if (strcmp(HWID, NULLSTRING) != 0)
-        new_node->HWID = HWID;
-    if (CONNECTION_TID != NO_CONNECTION_TID)
+    // direct string insertions are very unreliable, only use strncpy() function
+    if (strcmp(THREAD_IP, NULLSTRING) != 0) {
+         strncpy(new_node->THREAD_IP, THREAD_IP, strlen(THREAD_IP+1)); // fixme, this is missing the last number when inserted
+    }
+    if (strcmp(HWID, NULLSTRING) != 0) {
+        strncpy(new_node->HWID, HWID, strlen(HWID+1));
+    }
+    if (CONNECTION_TID != NO_CONNECTION_TID) {
         new_node->CONNECTION_TID = CONNECTION_TID;
-    if (strcmp(CONNECT_CODE, NULLSTRING) != 0)
-        new_node->CONNECT_CODE = CONNECT_CODE;
-    if (STATUS != NO_STATUS)
+    }
+    if (strcmp(CONNECT_CODE, NULLSTRING) != 0) {
+        strncpy(new_node->CONNECT_CODE, CONNECT_CODE, strlen(CONNECT_CODE+1));
+    }
+    if (STATUS != NO_STATUS) {
         new_node->STATUS = STATUS;
+    }
     new_node->ID = node_index;
 
     // make next of new node as head and previous as NULL
