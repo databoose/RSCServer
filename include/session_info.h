@@ -5,17 +5,21 @@
     #define NO_CONNECTION_TID 38671
     #define NO_STATUS 86284
 
+    #define THREAD_IP_SIZE 17 // 1 extra byte for null termination that will be inserted with strncpy()
+    #define HWID_SIZE 21
+    #define CONNECT_CODE_SIZE 10
+
     typedef enum {
         READY,
         BUSY
     } state;
 
     struct SessionInfoNode {
-        char THREAD_IP[16];
-        char HWID[19];
+        char THREAD_IP[THREAD_IP_SIZE];
+        char HWID[HWID_SIZE];
         int CONNECTION_TID;
 
-        char CONNECT_CODE[9];
+        char CONNECT_CODE[CONNECT_CODE_SIZE];
         state STATUS;
         int ID;
 
