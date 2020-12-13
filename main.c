@@ -108,6 +108,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     char *HWID = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, "HWID", NULLSTRING);
     if (strstr(HWID, "ny3_") != NULL)
     {
+        HWID = strremove(HWID, "ny3_");
         LOGF_DEBUG(thl, 0, "Client HWID : %s\n", HWID, "printf");
     }
     else
@@ -149,16 +150,14 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     free(CONNECT_CODE);
     free(HWID);
 
-    // TODO : Fix last number missing in THREAD_IP insertion (presumably in session_info.c)
-
     char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 24, "client message",NULLSTRING);
-    printf("clientmsg : %s\n", clientmsg);
+    // printf("clientmsg : %s\n", clientmsg);
     if (strcmp(clientmsg, "done") == 0) {
         LOGF_DEBUG(thl, 0, "Client told us to close connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     }
     else if (strstr(clientmsg, "connectto_") != NULL) {
         char *TARGET_CODE = strremove(clientmsg, "connectto_");
-        printf("target code : %s\n", TARGET_CODE);
+        // printf("target code : %s\n", TARGET_CODE);
 
         SessionInfoNode_T* TARGET_NODE;
         TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NO_ID);
