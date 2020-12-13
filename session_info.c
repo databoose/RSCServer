@@ -21,16 +21,16 @@ void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, int CON
     SessionInfoNode_T* new_node = (SessionInfoNode_T*) malloc(sizeof(SessionInfoNode_T));
     // direct string insertions are very unreliable, only use strncpy() function
     if (strcmp(THREAD_IP, NULLSTRING) != 0) {
-         strncpy(new_node->THREAD_IP, THREAD_IP, strlen(THREAD_IP+1)); // fixme, this is missing the last number when inserted
+         strncpy(new_node->THREAD_IP, THREAD_IP, THREAD_IP_SIZE-1);
     }
     if (strcmp(HWID, NULLSTRING) != 0) {
-        strncpy(new_node->HWID, HWID, strlen(HWID+1));
+        strncpy(new_node->HWID, HWID, HWID_SIZE-1);
     }
     if (CONNECTION_TID != NO_CONNECTION_TID) {
         new_node->CONNECTION_TID = CONNECTION_TID;
     }
     if (strcmp(CONNECT_CODE, NULLSTRING) != 0) {
-        strncpy(new_node->CONNECT_CODE, CONNECT_CODE, strlen(CONNECT_CODE+1));
+        strncpy(new_node->CONNECT_CODE, CONNECT_CODE, CONNECT_CODE_SIZE-1);
     }
     if (STATUS != NO_STATUS) {
         new_node->STATUS = STATUS;
