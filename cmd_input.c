@@ -9,6 +9,7 @@
 #include "include/logger.h"
 #include "include/main.h"
 #include "include/utils.h"
+#include "include/session_info.h"
 
 void cmd_input()
 {
@@ -157,6 +158,10 @@ void cmd_input()
             if (strcmp(input_cmd, "unban") == 0) { unbanning = true; }
         }
 
+        else if ((strcmp(input_cmd, "printusers") == 0)) {
+            print_list(LIST_HEAD);
+        }
+
         else if ((strcmp(input_cmd, "exit") == 0))
         {
             int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
@@ -173,7 +178,16 @@ void cmd_input()
 
         else if (strcmp(input_cmd, "help") == 0 || strcmp(input_cmd, "cmds") == 0)
         {
-            showhelp();
+            printf("\n");
+            printf("clearscr : clears screen\n");
+            printf("showthreads : shows current amount of running threads\n");
+            printf("showbans : shows current ban list\n");
+            printf("ban <ip address> : prevents specified IP address from opening connection threads to the server\n");
+            printf("unban <ip address>: unbans banned IP address\n");
+            printf("printusers : print list of user session info stored in ram\n");
+            printf("help/cmds : shows help/cmds\n");
+            printf("exit : gracefully exits the program\n");
+            printf("\n");
         }
 
         else
