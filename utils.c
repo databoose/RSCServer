@@ -112,21 +112,6 @@ void sig_handler(int signo)
 
 // basic utils
 
-int showhelp()
-{
-    printf("\n");
-    printf("clearscr : clears screen\n");
-    printf("showthreads : shows current amount of running threads\n");
-    printf("showbans : shows current ban list\n");
-    printf("ban <ip address> : prevents specified IP address from opening connection threads to the server\n");
-    printf("unban <ip address>: unbans banned IP address\n");
-    printf("help/cmds : shows help/cmds\n");
-    printf("exit : gracefully exits the program\n");
-    printf("\n");
-
-    return 0;
-}
-
 char *strremove(char *str, const char *sub) 
 {
     char *p, *q, *r;
