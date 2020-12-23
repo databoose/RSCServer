@@ -145,6 +145,9 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     strcat(CONNECT_CODE, "\n");
 
     safesend(clisock_ptr, CONNECTION_TID, thl, CONNECT_CODE);
+
+    // SessionInfoNode_T* CHECK_NODE;
+    // CHECK_NODE = find_node(LIST_HEAD, NULLSTRING, HWID, NO_ID);
     // CONNECT_CODE and HWID are fine normally in memory, but when we insert it into the node, for some reason it gets corrupted...
     add_node(&LIST_HEAD, THREAD_IP, HWID, CONNECTION_TID, CONNECT_CODE, READY);
     free(CONNECT_CODE);
@@ -160,12 +163,11 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         // printf("target code : %s\n", TARGET_CODE);
 
         SessionInfoNode_T* TARGET_NODE;
-        TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NO_ID);
+        TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NULLSTRING, NO_ID);
         if (TARGET_NODE != NULL) {
            printf("ID of node containing connect code %s : %d\n", TARGET_CODE, TARGET_NODE->ID);
            printf("IP Address : %s\n", TARGET_NODE->THREAD_IP);
        }
-       print_list(LIST_HEAD);
     }
     free(clientmsg);
 
