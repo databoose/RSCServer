@@ -31,6 +31,8 @@ void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, int CON
     }
     if (strcmp(CONNECT_CODE, NULLSTRING) != 0) {
         strncpy(new_node->CONNECT_CODE, CONNECT_CODE, CONNECT_CODE_SIZE-1);
+        // gets rid of newline that strncpy() adds in for some fucking reason
+        new_node->CONNECT_CODE[strcspn(new_node->CONNECT_CODE, "\n")] = 0;
     }
     if (STATUS != NO_STATUS) {
         new_node->STATUS = STATUS;
@@ -76,7 +78,7 @@ void delete_node(SessionInfoNode_T** head_ref, int ID) {
     clear_thread_logger(session_info_thl);
 }
 
-SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *THREAD_IP, int ID) {
+SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int ID) {
     SessionInfoNode_T* current = head;
     thread_logger* session_info_thl = new_thread_logger(debug_mode);
 
@@ -95,11 +97,25 @@ SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *
         }
         LOGF_DEBUG(session_info_thl, 0, "No ID matches found in any of the nodes", "printf");
     }
+
+    if(strcmp(HWID, NULLSTRING) != 0 && hasran == false) {
+        hasran = true;
+
+        while (current != NULL) {
+            if(strcmp(current->HWID, HWID) == 0) {
+              return current; // returns pointer of the node that has HWID
+              current = current->NEXT;
+          }
+          else {
+              break;
+          }
+        }
+    }
     
     if (strcmp(CONNECT_CODE, NULLSTRING) != 0 && hasran == false) { // if we passed a connect code
         hasran = true;
         while (current != NULL) {
-          if(current->CONNECT_CODE == CONNECT_CODE) {
+          if(strcmp(current->CONNECT_CODE, CONNECT_CODE) == 0) {
               return current; // returns pointer of the node that has ID
               current = current->NEXT;
           }
@@ -113,7 +129,7 @@ SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *
     if (strcmp(THREAD_IP, NULLSTRING) != 0 && hasran == false) { // if we passed an ip address
         hasran = true;
         while (current != NULL) {
-          if(current->THREAD_IP == THREAD_IP) {
+          if(strcmp(current->THREAD_IP, THREAD_IP) == 0) {
               return current; // returns pointer of the node that has IP
               current = current->NEXT;
           }
