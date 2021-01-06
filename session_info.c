@@ -10,7 +10,7 @@
 
 int node_index = 0;
 
-void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, int CONNECTION_TID, char *CONNECT_CODE, state STATUS) {
+int add_node(SessionInfoNode_T** head_ref, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int CONNECTION_TID, state STATUS) {
     node_index++;
     if (node_index > MAX_SESSION_STRUCTS) {
         thread_logger* session_info_thl = new_thread_logger(debug_mode);
@@ -48,6 +48,8 @@ void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, int CON
         (*head_ref)->PREV = new_node;
     // move the head to point to the new node we just created
     (*head_ref) = new_node;
+
+    return node_index; // ID of this node
 }
 
 void delete_node(SessionInfoNode_T** head_ref, int ID) {

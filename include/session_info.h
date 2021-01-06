@@ -29,7 +29,7 @@
     typedef struct SessionInfoNode SessionInfoNode_T;
     extern SessionInfoNode_T* LIST_HEAD;
 
-    void add_node(SessionInfoNode_T** head_ref, char *THREAD_IP, char *HWID, int CONNECTION_TID, char *CONNECT_CODE, state STATUS);
+    int add_node(SessionInfoNode_T** head_ref, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int CONNECTION_TID, state STATUS);
     SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int ID);
     void delete_node(SessionInfoNode_T** head_ref, int ID);
     void print_list(SessionInfoNode_T* head);
