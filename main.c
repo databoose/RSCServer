@@ -60,14 +60,11 @@ void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_s
         errno = 0;
     }
 
-    else
+    timeout.tv_sec = timeout_output_seconds;
+    if (setsockopt(servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
     {
-        timeout.tv_sec = timeout_output_seconds;
-        if (setsockopt(servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
-        {
-            LOGF_DEBUG(thl_set_timeout, 0, "setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
-            errno = 0;
-        }
+        LOGF_DEBUG(thl_set_timeout, 0, "setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
+        errno = 0;
     }
     clear_thread_logger(thl_set_timeout);
     //printf("Timeout set\n");
@@ -149,31 +146,37 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     // SessionInfoNode_T* CHECK_NODE;
     // CHECK_NODE = find_node(LIST_HEAD, NULLSTRING, HWID, NO_ID);
     // CONNECT_CODE and HWID are fine normally in memory, but when we insert it into the node, for some reason it gets corrupted...
-    add_node(&LIST_HEAD, THREAD_IP, HWID, CONNECTION_TID, CONNECT_CODE, READY);
+    int self_id = add_node(&LIST_HEAD, CONNECT_CODE, THREAD_IP, HWID, CONNECTION_TID, READY);
     free(CONNECT_CODE);
     free(HWID);
 
-    char *clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 24, "client message",NULLSTRING);
-    // printf("clientmsg : %s\n", clientmsg);
-    if (strcmp(clientmsg, "done") == 0) {
-        LOGF_DEBUG(thl, 0, "Client told us to close connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
-    }
-    else if (strstr(clientmsg, "connectto_") != NULL) {
-        char *TARGET_CODE = strremove(clientmsg, "connectto_");
-        // printf("target code : %s\n", TARGET_CODE);
+    char *clientmsg;
+    msgloop:
+        clientmsg = saferecv(clisock_ptr, CONNECTION_TID, thl, 24, "client message",NULLSTRING);
+        // printf("clientmsg : %s\n", clientmsg);
+        if (strstr(clientmsg, "connectto_") != NULL) {
+            char *TARGET_CODE = strremove(clientmsg, "connectto_");
+            // printf("target code : %s\n", TARGET_CODE);
+                
+            timer_signal_ran(THREAD_IP, thl);
+            SessionInfoNode_T* TARGET_NODE;
+            TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NULLSTRING, NO_ID);
+            if (TARGET_NODE != NULL) {
+                printf("ID of node containing connect code %s : %d\n", TARGET_CODE, TARGET_NODE->ID);
+                printf("IP Address : %s\n", TARGET_NODE->THREAD_IP);
+            }
+            goto msgloop;
+        }
+        else if (strcmp(clientmsg, "done") == 0) {
+            LOGF_DEBUG(thl, 0, "Client says we are done (CONNECTION TID: %d)", CONNECTION_TID, "printf");
+        }
+        free(clientmsg);
 
-        SessionInfoNode_T* TARGET_NODE;
-        TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NULLSTRING, NO_ID);
-        if (TARGET_NODE != NULL) {
-           printf("ID of node containing connect code %s : %d\n", TARGET_CODE, TARGET_NODE->ID);
-           printf("IP Address : %s\n", TARGET_NODE->THREAD_IP);
-       }
-    }
-    free(clientmsg);
-
-    // done with whatever we want to do, now quit
+    LOGF_DEBUG(thl, 0, "Closing connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     LOGF_DEBUG(thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
+    delete_node(&LIST_HEAD, self_id);
     clear_thread_logger(thl);
+
     close(clisock);
     pthread_exit(0);
 }
