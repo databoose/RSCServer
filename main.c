@@ -90,7 +90,6 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     }
     fclose(urand_ptr);
     pthread_mutex_unlock(&rand_mutex);
-
     LOGF_DEBUG(thl, 0, "CONNECTION TID : %d", CONNECTION_TID, "printf");
     //LOGF_DEBUG(thl,0, "Mutex unlocked (TID : %d)", CONNECTION_TID, "printf");
 
@@ -103,10 +102,15 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     safesend(clisock_ptr, CONNECTION_TID, thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
 
     char *HWID = saferecv(clisock_ptr, CONNECTION_TID, thl, 20, "HWID", NULLSTRING);
-    if (strstr(HWID, "ny3_") != NULL)
-    {
+    if (strstr(HWID, "ny3_") != NULL) {
         HWID = strremove(HWID, "ny3_");
         LOGF_DEBUG(thl, 0, "Client HWID : %s\n", HWID, "printf");
+        if (find_node(LIST_HEAD, NULLSTRING, NULLSTRING, HWID, NO_ID) != NULL) {
+            LOGF_ERROR(thl, 0, "HWID already in one connection thread, exiting this one to prevent duplicate session", "printf");
+            clear_thread_logger(thl);
+            close(clisock);
+            pthread_exit(0);
+        }
     }
     else
     {
@@ -171,7 +175,6 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
             LOGF_DEBUG(thl, 0, "Client says we are done (CONNECTION TID: %d)", CONNECTION_TID, "printf");
         }
         free(clientmsg);
-
     LOGF_DEBUG(thl, 0, "Closing connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     LOGF_DEBUG(thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
     delete_node(&LIST_HEAD, self_id);
@@ -247,10 +250,9 @@ int main(enum MAIN_OPTION opt)
     // end of init shit
     for (;;)
     {
-        int clisock;
         socklen_t cli_addr_size = sizeof(cli_addr);
 
-        clisock = accept(servsockfd, (SA *)&cli_addr, &cli_addr_size); // last two parameters should fill an optionable client struct for info
+        int clisock = accept(servsockfd, (SA *)&cli_addr, &cli_addr_size); // last two parameters should fill an optionable client struct for info
         if (clisock >= 0)                                              // if client connects
         {
             for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++) // BANNED_RAWLEN_SIZE - 1 because we want to start at element 0 through the banned_addresses arrays
