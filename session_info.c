@@ -13,10 +13,8 @@ int node_index = 0;
 int add_node(SessionInfoNode_T** head_ref, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int CONNECTION_TID, state STATUS) {
     node_index++;
     if (node_index > MAX_SESSION_STRUCTS) {
-        thread_logger* session_info_thl = new_thread_logger(debug_mode);
-        LOGF_ERROR(session_info_thl, 0, "Cannot add node, max amount of session structs have been allocated", "printf");
-        clear_thread_logger(session_info_thl);
-        return;
+        LOGF_ERROR(global_thl, 0, "Cannot add node, max amount of session structs have been allocated", "printf");
+        return 0;
     }
     SessionInfoNode_T* new_node = (SessionInfoNode_T*) malloc(sizeof(SessionInfoNode_T));
     // direct string insertions are very unreliable, only use strncpy() function
@@ -54,8 +52,6 @@ int add_node(SessionInfoNode_T** head_ref, char *CONNECT_CODE, char *THREAD_IP, 
 
 void delete_node(SessionInfoNode_T** head_ref, int ID) {
     node_index--;
-    thread_logger* session_info_thl = new_thread_logger(debug_mode);
-
     SessionInfoNode_T* current = *head_ref, *prev;
     while (current != NULL && current->ID == ID) {
         *head_ref = current->NEXT;
@@ -76,13 +72,11 @@ void delete_node(SessionInfoNode_T** head_ref, int ID) {
 
     prev->NEXT = current->NEXT;
     free(current);
-    LOGF_DEBUG(session_info_thl, 0, "Deleted node with ID : %d", ID, "printf");
-    clear_thread_logger(session_info_thl);
+    LOGF_DEBUG(global_thl, 0, "Deleted node with ID : %d", ID, "printf");
 }
 
 SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int ID) {
     SessionInfoNode_T* current = head;
-    thread_logger* session_info_thl = new_thread_logger(debug_mode);
 
     bool hasran = false;
 
@@ -97,7 +91,7 @@ SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *
               break;
            }
         }
-        LOGF_DEBUG(session_info_thl, 0, "No ID matches found in any of the nodes", "printf");
+        LOGF_DEBUG(global_thl, 0, "No ID matches found in any of the nodes", "printf");
     }
 
     if(strcmp(HWID, NULLSTRING) != 0 && hasran == false) {
@@ -125,7 +119,7 @@ SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *
               break;
           }
         }
-        LOGF_DEBUG(session_info_thl, 0, "No connect code matches found in any of the nodes", "printf");
+        LOGF_DEBUG(global_thl, 0, "No connect code matches found in any of the nodes", "printf");
     }
 
     if (strcmp(THREAD_IP, NULLSTRING) != 0 && hasran == false) { // if we passed an ip address
@@ -139,7 +133,7 @@ SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *
               break;
           }
         }
-        LOGF_DEBUG(session_info_thl, 0, "No IP matches found in any of the nodes", "printf");
+        LOGF_DEBUG(global_thl, 0, "No IP matches found in any of the nodes", "printf");
     }
 
     return NULL; // if not found return nothing
