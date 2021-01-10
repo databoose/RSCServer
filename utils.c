@@ -22,7 +22,7 @@
 void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
 {
     if (strchr(buf,'\n') == NULL) {
-        LOGF_ERROR(logger, 0, "safesend : no newline detected in buffer provded, emergency closing socket", "printf");
+        LOGF_ERROR(global_thl, 0, "safesend : no newline detected in buffer provded, emergency closing socket", "printf");
         close(*clisock);
         pthread_exit(0);
     }
@@ -34,7 +34,7 @@ void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
         pthread_exit(0);
     }
     else {
-        LOGF_DEBUG(logger, 0 , "Sent %s", buf, "printf");
+        LOGF_DEBUG(global_thl, 0 , "Sent %s", buf, "printf");
     }
 }
 
@@ -42,27 +42,28 @@ char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char* 
 {
     char *buf = malloc((len + 1) * sizeof(char)); // +1 for '\0' character
     
-    LOGF_DEBUG(logger, 0, "Waiting for %s message from client ... ", type, "printf");
+    LOGF_DEBUG(global_thl, 0, "Waiting for %s message from client ... ", type, "printf");
     int recv_status = recv(*clisock, (void *)buf, (len + 1), 0);
     if (recv_status == -1)
     {
+        // we failed recv, so print and return SOCKET_ERROR for handle_connection to deal
         print_recv_err(TID);
-        close(*clisock);
-        pthread_exit(0);
+        return "SOCKET_ERROR";
+        // close(*clisock);
+        // pthread_exit(0);
     }
 
     if (strcmp(expected_string, NULLSTRING) != 0) // if something is passed here
     {
         if (strcmp(expected_string, buf) == 0)
         {
-            LOGF_DEBUG(logger, 0, "Expected message lines up with received message \"%s\"", buf, "printf");
+            LOGF_DEBUG(global_thl, 0, "Expected message lines up with received message \"%s\"", buf, "printf");
         }
         else
         {
-            LOGF_ERROR(logger, 0, "String mismatch, expected string does not match up with message \"%s\" from client...", buf, "printf");
-            LOGF_DEBUG(logger, 0 , "Exiting thread due to verification failure", "printf");
+            LOGF_ERROR(global_thl, 0, "String mismatch, expected string does not match up with message \"%s\" from client...", buf, "printf");
+            LOGF_DEBUG(global_thl, 0 , "Exiting thread due to verification failure", "printf");
             
-            clear_thread_logger(logger);
             close(*clisock);
             pthread_exit(0);
         }
@@ -75,37 +76,33 @@ char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char* 
 
 void sig_handler(int signo)
 {
-    thread_logger *thl_sig = new_thread_logger(debug_mode);
-
     if (signo == SIGINT) // control+c
     {
         printf("\nInterrupt request detected, exiting...\n");
         int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
         if (delfile <= -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
+            LOGF_ERROR(global_thl, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
         }
 
         int deldir = remove("/dev/shm/linkup-varstore/");
         if (deldir == -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
+            LOGF_ERROR(global_thl, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
         }
-        clear_thread_logger(thl_sig);
         exit(0);
     }
 
     if (signo == SIGSEGV) // segfault
     {
-        LOGF_ERROR(thl_sig, 0, "Segfault caught, exiting...", "printf");
+        LOGF_ERROR(global_thl, 0, "Segfault caught, exiting...", "printf");
         int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
         if (delfile <= -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
+            LOGF_ERROR(global_thl, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); 
         }
 
         int deldir = remove("/dev/shm/linkup-varstore/");
         if (deldir == -1) { 
-            LOGF_ERROR(thl_sig, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
+            LOGF_ERROR(global_thl, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); 
         }
-        clear_thread_logger(thl_sig);
         exit(0);
     }
 }
@@ -160,32 +157,27 @@ int lengthofstring(char* tempstring)
 
 void print_recv_err(int TID)
 {
-    thread_logger *thl_recverr = new_thread_logger(debug_mode);
-    LOGF_ERROR(thl_recverr, 0, "Error reading from socket : (TID : %ld)", TID);
-    LOGF_ERROR(thl_recverr, 0, "%s (Error code %d)", strerror(errno), errno);
+    LOGF_ERROR(global_thl, 0, "Error reading from socket : (TID : %ld)", TID);
+    LOGF_ERROR(global_thl, 0, "%s (Error code %d)", strerror(errno), errno);
     
     errno = 0; // reset global errno
-    clear_thread_logger(thl_recverr);
 }
 
 void print_send_err(int TID)
 {
-    thread_logger *thl_senderr = new_thread_logger(debug_mode);
-    LOGF_ERROR(thl_senderr, 0, "Error writing to socket : (TID : %ld\n", TID);
-    LOGF_ERROR(thl_senderr, 0, "%s (Error code %d) \n", strerror(errno), errno)
+    LOGF_ERROR(global_thl, 0, "Error writing to socket : (TID : %ld\n", TID);
+    LOGF_ERROR(global_thl, 0, "%s (Error code %d) \n", strerror(errno), errno)
     
     errno = 0;
-    clear_thread_logger(thl_senderr);
 }
 
 void thread_store(enum THREAD_STORE_OPTION opt)
 {
     FILE *fptr;
-    thread_logger *thl_thread_store = new_thread_logger(debug_mode);
 
     if (opt == create)
     {
-        LOGF_DEBUG(thl_thread_store, 0, "Creating directory for shared memory storage", "printf");
+        LOGF_DEBUG(global_thl, 0, "Creating directory for shared memory storage", "printf");
         if (system("mkdir /dev/shm/linkup-varstore") <= -1)
         {
             printf("possible system() error : %s (Error code %d)\n", strerror(errno), errno);
@@ -196,16 +188,16 @@ void thread_store(enum THREAD_STORE_OPTION opt)
     if (opt == update)
     {
         int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
-        if (delfile <= -1) { LOGF_ERROR(thl_thread_store, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); }
+        if (delfile <= -1) { LOGF_ERROR(global_thl, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno); }
 
         int deldir = remove("/dev/shm/linkup-varstore/");
-        if (deldir == -1) { LOGF_ERROR(thl_thread_store, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); }
+        if (deldir == -1) { LOGF_ERROR(global_thl, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno); }
 
         int sysmkdir = system("mkdir /dev/shm/linkup-varstore/");
-        if (sysmkdir <= -1) { LOGF_ERROR(thl_thread_store, 0, "possible system() mkdir error : %s (Error code %d)\n", strerror(errno), errno); }
+        if (sysmkdir <= -1) { LOGF_ERROR(global_thl, 0, "possible system() mkdir error : %s (Error code %d)\n", strerror(errno), errno); }
 
         int sysappend = system(appendcmd);
-        if (sysappend <= -1) { LOGF_ERROR(thl_thread_store, 0, "possible syste() appendcmd error : %s (Error code %d)\n", strerror(errno), errno); }
+        if (sysappend <= -1) { LOGF_ERROR(global_thl, 0, "possible syste() appendcmd error : %s (Error code %d)\n", strerror(errno), errno); }
 
         fptr = fopen("/dev/shm/linkup-varstore/thread_count", "r"); //fopen automatically creates this file for us if it doesn't exist, if entire directory does not exist however, we need to manually create the dir (which is why we call mkdir before)
         while (!feof(fptr))                                         // segfault if no file or directory
@@ -221,7 +213,6 @@ void thread_store(enum THREAD_STORE_OPTION opt)
         fclose(fptr);
         remove("/dev/shm/linkup-varstore/");
     }
-    clear_thread_logger(thl_thread_store);
 }
 
 void banlist_append_ipaddr(char *THREAD_IP)
@@ -265,12 +256,11 @@ void banlist_append_ipaddr(char *THREAD_IP)
 
 void banlist_remove_ipaddr(char *THREAD_IP)
 {
-    thread_logger *thl_banlist_remove_ipaddr = new_thread_logger(debug_mode);
     for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++)
     {
         if (strcmp(banned_addresses[i], THREAD_IP) == 0)
         {
-            LOGF_DEBUG(thl_banlist_remove_ipaddr, 0 ,"IP address %s removed from banlist\n", THREAD_IP, "printf");
+            LOGF_DEBUG(global_thl, 0 ,"IP address %s removed from banlist\n", THREAD_IP, "printf");
             strncpy(banned_addresses[i], "", 1);
             break;
         }
@@ -280,11 +270,9 @@ void banlist_remove_ipaddr(char *THREAD_IP)
             continue;
         }
     }
-
-    clear_thread_logger(thl_banlist_remove_ipaddr);
 }
 
-void timer_signal_ran(char *THREAD_IP, thread_logger *logger) // tells timer thread that the client is talking to us and has ran something
+void timer_signal_ran(char *THREAD_IP) // tells timer thread that the client is talking to us and has ran something
 {
     bool submitted = false;
 
@@ -293,17 +281,17 @@ void timer_signal_ran(char *THREAD_IP, thread_logger *logger) // tells timer thr
         if (strcmp(signal_addresses[i],"") == 0) // if blank, let's populate this one
         {
             strncpy(signal_addresses[i], THREAD_IP, sizeof(signal_addresses[i]));
-            //LOGF_DEBUG(logger, 0, "Putting IP in signal list", "printf");
+            //LOGF_DEBUG(global_thl, 0, "Putting IP in signal list", "printf");
             usleep(260 * 1000); // 260ms to wait for timer thread to register that we just ran
             strncpy(signal_addresses[i], "", sizeof(signal_addresses[i]));
-            //LOGF_DEBUG(logger, 0, "Removing IP from signal list", "printf");
+            //LOGF_DEBUG(global_thl, 0, "Removing IP from signal list", "printf");
 
             submitted = true;
             break;
         }
     }
 
-    if (submitted == false) { LOGF_ERROR(logger, 0, "Could not find an empty array element in ipsignal to popluate, fixme.", "printf"); }
+    if (submitted == false) { LOGF_ERROR(global_thl, 0, "Could not find an empty array element in ipsignal to popluate, fixme.", "printf"); }
 }
 
 void timer_append_ipaddr(char *THREAD_IP)
@@ -350,7 +338,7 @@ void timer_remove_ipaddr(char *THREAD_IP)
     {
         if (strcmp(timed_addresses[i], THREAD_IP) == 0)
         {
-            printf("Removing %s from timer list\n", timed_addresses[i]);
+            LOGF_DEBUG(global_thl, 0, "Removing %s from timer list\n", timed_addresses[i], "printf");
             strncpy(timed_addresses[i], "", 1);
             break;
         }
