@@ -13,7 +13,6 @@
 
 void handle_timer(void *VPTR_THREAD_IP)
 {
-    thread_logger *thl_timer = new_thread_logger(debug_mode);
     char *THREAD_IP = (char *)VPTR_THREAD_IP;
     timer_thread_count++; // this is to disclude from general thread count
 
@@ -21,8 +20,7 @@ void handle_timer(void *VPTR_THREAD_IP)
     {
         if (strcmp(timed_addresses[i], THREAD_IP) == 0)
         { // if IP is still in timed_address array
-            // LOGF_DEBUG(thl_timer, 0 ,"Timer thread already found for this IP, exiting thread\n","printf");
-            clear_thread_logger(thl_timer);
+            // LOGF_DEBUG(global_thl, 0 ,"Timer thread already found for this IP, exiting thread\n","printf");
             timer_thread_count--;
             pthread_exit(0);
             break;
@@ -36,16 +34,15 @@ void handle_timer(void *VPTR_THREAD_IP)
     FILE *urand_ptr;
     urand_ptr = fopen("/dev/urandom", "rb");
     if (fread(&TIMER_TID, 1, 3, urand_ptr) <= 0) { // read 3 bytes to fill int
-        LOGF_ERROR(thl_timer, 0, "fread error, returned 0 or below", "printf");
-        LOGF_ERROR(thl_timer, 0, "%s", strerror(errno), "printf");
+        LOGF_ERROR(global_thl, 0, "fread error, returned 0 or below", "printf");
+        LOGF_ERROR(global_thl, 0, "%s", strerror(errno), "printf");
     }
     if (TIMER_TID < 0) {
         TIMER_TID = abs(TIMER_TID);
     }
     fclose(urand_ptr);
 
-    LOGF_DEBUG(thl_timer, 0, "TIMER TID : %d", TIMER_TID, NULL);
-
+    LOGF_DEBUG(global_thl, 0, "TIMER TID : %d", TIMER_TID, NULL);
     struct timerblock block = {.seconds_passed = 0, .times_ran = 0};
     struct timerblock longer = {.seconds_passed = 0, .times_ran = 0};
 
@@ -77,7 +74,7 @@ void handle_timer(void *VPTR_THREAD_IP)
             if (strcmp(signal_addresses[i], THREAD_IP) == 0)
             {
                 block.times_ran++;
-                LOGF_DEBUG(thl_timer, 0, "Timer thread (%d) : Action registered in temporary time block : %d", TIMER_TID, block.times_ran, "printf");
+                LOGF_DEBUG(global_thl, 0, "Timer thread (%d) : Action registered in temporary time block : %d", TIMER_TID, block.times_ran, "printf");
                 break;
             }
             
@@ -108,7 +105,7 @@ void handle_timer(void *VPTR_THREAD_IP)
             {
                 if (block.times_ran >= 5)
                 {
-                    LOGF_INFO(thl_timer, 0, "Timing out %s for 30 seconds", THREAD_IP, "printf");
+                    LOGF_INFO(global_thl, 0, "Timing out %s for 30 seconds", THREAD_IP, "printf");
                     banlist_append_ipaddr(THREAD_IP);
                     sleep(30);
                     banlist_remove_ipaddr(THREAD_IP);
@@ -122,8 +119,7 @@ void handle_timer(void *VPTR_THREAD_IP)
     }
     while (detected == true);
 
-    printf("Exiting %s timer thread (TIMER TID : %d), no longer active\n", THREAD_IP, TIMER_TID);
-    clear_thread_logger(thl_timer);
+    LOGF_DEBUG(global_thl, 0, "Exiting %s timer thread (TIMER TID : %d), no longer active\n", THREAD_IP, TIMER_TID, "printf");
     timer_remove_ipaddr(THREAD_IP);
     timer_thread_count--;
     pthread_exit(0);
