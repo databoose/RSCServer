@@ -21,7 +21,6 @@ char query[85]; // below 80 seems to cause buffer overflow from sprintf, beware
 
 void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* value1, char* value2)
 {
-    thread_logger *thl_insertquery = new_thread_logger(debug_mode);
     memset(query, '\0', sizeof(query));
     sprintf(query, "INSERT INTO %s(%s,%s) values('%s','%s');", table, column1,column2, value1,value2);
     // printf("Submitting query : %s\n", query);
@@ -33,7 +32,6 @@ void insert_query(MYSQL *conn, char* table, char* column1, char* column2, char* 
     else {
         printf("Successfully inserted\n");
     }
-    clear_thread_logger(thl_insertquery);
 }
 
 void print_table_contents(MYSQL *conn, char* table)
@@ -59,24 +57,21 @@ void print_table_contents(MYSQL *conn, char* table)
 
 int mysql_register(char *ipaddr, char *hwidhash)
 {
-    thread_logger *thl_mysqlmain = new_thread_logger(debug_mode);
     MYSQL *conn;
     conn = mysql_init(NULL); //initalizes MYSQL structs
 
     // try to connect, if fails print error
     if(!(mysql_real_connect(conn, host, user, pass, dbname, port, unix_socket, flag))) {
         printf("MySQL query error : %s\n",mysql_error(conn));
-        LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
+        LOGF_ERROR(global_thl, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong.", "printf");
         mysql_close(conn);
-        clear_thread_logger(thl_mysqlmain);
         return 0;
     }
 
     if(conn->thread_id == 0)
     {
-        LOGF_ERROR(thl_mysqlmain, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong. (thread_id == 0)", "printf");
+        LOGF_ERROR(global_thl, 0 ,"Refusing to run mysql routine, mysql server most likely not running or something else horribly wrong. (thread_id == 0)", "printf");
         mysql_close(conn);
-        clear_thread_logger(thl_mysqlmain);
 
         return 0;
     }
@@ -86,8 +81,6 @@ int mysql_register(char *ipaddr, char *hwidhash)
         insert_query(conn, "users", "hwidhash", "ipaddr", 
                                      hwidhash, ipaddr);
         mysql_close(conn);
-        clear_thread_logger(thl_mysqlmain);
-
         return 1;
     }
 
