@@ -13,20 +13,19 @@
 
 void cmd_input()
 {
-    thread_logger *thl_cmdinput = new_thread_logger(debug_mode);
-    //LOGF_DEBUG(thl_cmdinput, 0, "cmd input thread started", "printf");
+    //LOGF_DEBUG(global_thl, 0, "cmd input thread started", "printf");
     char *input_cmd;
     
     for (;;)
     {
-        // LOGF_DEBUG(thl_cmdinput, 0 , "for ;; ran", "printf");
+        // LOGF_DEBUG(global_thl, 0 , "for ;; ran", "printf");
         usleep(40 * 1000);
         input_cmd = malloc((50 + 1) * sizeof(char)); // +1 for '\0' character
 
         int scanfret = scanf("%s", input_cmd);
         if (scanfret > 1)
         {
-            LOGF_DEBUG(thl_cmdinput, 0, "Potential error, scanf ret %d", scanfret);
+            LOGF_DEBUG(global_thl, 0, "Potential error, scanf ret %d", scanfret);
         }
 
         if (strcmp(input_cmd, "clearscr") == 0)
@@ -41,7 +40,7 @@ void cmd_input()
         {
             thread_store(update);
             if (thread_count - 2 < 0) {
-                // LOGF_ERROR(thl_cmdinput, 0, "Thread count is below zero, something went wrong", "printf");
+                // LOGF_ERROR(global_thl, 0, "Thread count is below zero, something went wrong", "printf");
             }
             printf("Thread count : %d\n", thread_count); 
             printf("\n");
@@ -100,11 +99,10 @@ void cmd_input()
                 }
                 if (has_empty == false) // if none are empty, then we are full
                 {
-                    LOGF_ERROR(thl_cmdinput, 0, "ERROR : Banned list is full", "printf");
+                    LOGF_ERROR(global_thl, 0, "ERROR : Banned list is full", "printf");
                     banning = false; // we aint banning anymore
 
                     // we don't exactly need to do this, we can escape other ways but this is more ram friendly
-                    clear_thread_logger(thl_cmdinput);
                     pthread_t input_thread;
                     pthread_create(&input_thread, NULL, (void *)cmd_input, NULL);
                     pthread_exit(0);
@@ -118,7 +116,7 @@ void cmd_input()
                         if (strcmp(banned_addresses[i], "") == 0)
                         { // if is blank
                             strncpy(banned_addresses[i], input_cmd, sizeof(banned_addresses[i]));
-                            LOGF_INFO(thl_cmdinput,0,"Banned IP address %s",banned_addresses[i]);
+                            LOGF_INFO(global_thl,0,"Banned IP address %s",banned_addresses[i]);
 
                             banning = false;
                             break;
@@ -166,12 +164,12 @@ void cmd_input()
         {
             int delfile = system("rm -rf /dev/shm/linkup-varstore/thread_count");
             if (delfile <= -1) {
-                LOGF_ERROR(thl_cmdinput, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno);
+                LOGF_ERROR(global_thl, 0, "Failed to remove file, %s (Error code %d): ", strerror(errno), errno);
             }
 
             int deldir = remove("/dev/shm/linkup-varstore/");
             if (deldir == -1) {
-                LOGF_ERROR(thl_cmdinput, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno);
+                LOGF_ERROR(global_thl, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno);
             }
             exit(0);
         }
@@ -200,6 +198,5 @@ void cmd_input()
     }
 
     free(input_cmd);
-    clear_thread_logger(thl_cmdinput);
     pthread_exit(0);
 }
