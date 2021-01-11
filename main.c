@@ -40,34 +40,6 @@ static pthread_mutex_t linked_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 thread_logger* global_thl;
 SessionInfoNode_T* LIST_HEAD;
 
-void set_timeout(int servsockfd, int timeout_input_seconds, int timeout_output_seconds)
-{
-    /*
-        Setting options :
-        - SO_RCVTIMO, to set timeout for input operations
-        - SO_SNDTIMEO, to set timeout for output operations
-    */
-
-    struct timeval timeout;
-    timeout.tv_usec = 0;
-    timeout.tv_sec = 0;
-
-    timeout.tv_sec = timeout_input_seconds;
-    if (setsockopt(servsockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
-    {
-        LOGF_DEBUG(global_thl, 0, "setsockopt so_rcvtimeo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
-        errno = 0;
-    }
-
-    timeout.tv_sec = timeout_output_seconds;
-    if (setsockopt(servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
-    {
-        LOGF_DEBUG(global_thl, 0, "setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno, "printf");
-        errno = 0;
-    }
-    //printf("Timeout set\n");
-}
-
 void handle_connection(void *p_clisock) // thread functions need to be a void pointer, args can be void pointer or directly referenced via & pointer when working with ints
 {
     int clisock = *((int *)p_clisock); // dereference pointer
@@ -171,7 +143,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
         else if (strcmp(clientmsg, "SOCKET_ERROR") == 0) {
            // no message because saferecv will already print this for us
         }
-        free(clientmsg);
+        free(clientmsg); // invalid pointer error (interrupted system call) ? may be unsafe
     LOGF_DEBUG(global_thl, 0, "Closing connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     LOGF_DEBUG(global_thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
     delete_node(&LIST_HEAD, self_id);
@@ -202,11 +174,16 @@ int main(enum MAIN_OPTION opt)
         serv_addr.sin_port = htons(PORT);
         serv_addr.sin_addr.s_addr = inet_addr("10.0.0.225");
 
+        struct timeval timeout;      
+        timeout.tv_sec = TIMEOUT_IN;
+        timeout.tv_usec = 0;
+
+        if (setsockopt (servsockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
+            LOGF_ERROR(global_thl, 0, "setsockopt so_rcvtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
+        if (setsockopt (servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
+            LOGF_ERROR(global_thl, 0, "setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
         if (setsockopt(servsockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
-        {
             LOGF_ERROR(global_thl, 0, "setsockopt so_reuseaddr unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
-            errno = 0;
-        }
         LOGF_DEBUG(global_thl, 0, "Set reuse", NULL);
         LOGF_DEBUG(global_thl, 0, "Binding...", NULL);
 
@@ -278,7 +255,6 @@ int main(enum MAIN_OPTION opt)
 
             pthread_t timer_thread;
             pthread_create(&timer_thread, NULL, (void *)handle_timer, (void *)THREAD_IP);
-            set_timeout(servsockfd, TIMEOUT_IN, TIMEOUT_OUT);
 
             printf("\n");
             LOGF_INFO(global_thl, 0, "Connection accepted from : %s:%d", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
