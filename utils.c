@@ -48,7 +48,8 @@ char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char* 
     {
         // we failed recv, so print and return SOCKET_ERROR for handle_connection to deal
         print_recv_err(TID);
-        return "SOCKET_ERROR";
+        strncpy(buf, "SOCKET_ERROR", 13);
+        return buf;
         // close(*clisock);
         // pthread_exit(0);
     }
