@@ -37,8 +37,8 @@ struct sockaddr_in cli_addr;
 static pthread_mutex_t rand_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t linked_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-thread_logger* global_thl;
-SessionInfoNode_T* LIST_HEAD;
+thread_logger *global_thl;
+SessionInfoNode_T *LIST_HEAD;
 
 void handle_connection(void *p_clisock) // thread functions need to be a void pointer, args can be void pointer or directly referenced via & pointer when working with ints
 {
@@ -46,15 +46,21 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     free(p_clisock);                   // we don't need the pointer anymore.
     int *clisock_ptr = &clisock;
 
+    signal(SIGINT, sig_handler);
+    signal(SIGSEGV, sig_handler);
+    signal(SIGPIPE, sig_handler);
+
     pthread_mutex_lock(&rand_mutex); // setting lock everytime we pull from /dev/urandom to prevent other users pulling same values
     int CONNECTION_TID;
     FILE *urand_ptr;
     urand_ptr = fopen("/dev/urandom", "rb");
-    if (fread(&CONNECTION_TID, 1, sizeof(int), urand_ptr) <= 0) {
+    if (fread(&CONNECTION_TID, 1, sizeof(int), urand_ptr) <= 0)
+    {
         LOGF_ERROR(global_thl, 0, "fread error, returned 0 or below", "printf");
         LOGF_ERROR(global_thl, 0, "%s", strerror(errno), "printf");
     }
-    if (CONNECTION_TID < 0) {
+    if (CONNECTION_TID < 0)
+    {
         CONNECTION_TID = abs(CONNECTION_TID);
     }
     fclose(urand_ptr);
@@ -66,15 +72,17 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     timer_signal_ran(THREAD_IP); // run this everytime a user action ran
 
     // at this point, do whatever you want to here, the code below is specific to this application
-    char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, global_thl, lengthofstring("Ar4#8Pzw<&M00Nk"), "verification", "Ar4#8Pzw<&M00Nk");
-    free(ret_ptr);                                                    // frees malloced return value from saferecv
-    safesend(clisock_ptr, CONNECTION_TID, global_thl, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
+    char *ret_ptr = saferecv(clisock_ptr, CONNECTION_TID, lengthofstring("Ar4#8Pzw<&M00Nk"), "verification", "Ar4#8Pzw<&M00Nk");
+    free(ret_ptr);                                               // frees malloced return value from saferecv
+    safesend(clisock_ptr, CONNECTION_TID, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
 
-    char *HWID = saferecv(clisock_ptr, CONNECTION_TID, global_thl, 20, "HWID", NULLSTRING);
-    if (strstr(HWID, "ny3_") != NULL) {
+    char *HWID = saferecv(clisock_ptr, CONNECTION_TID, 20, "HWID", NULLSTRING);
+    if (strstr(HWID, "ny3_") != NULL)
+    {
         HWID = strremove(HWID, "ny3_");
         LOGF_DEBUG(global_thl, 0, "Client HWID : %s\n", HWID, "printf");
-        if (find_node(LIST_HEAD, NULLSTRING, NULLSTRING, HWID, NO_ID) != NULL) {
+        if (find_node(LIST_HEAD, NULLSTRING, NULLSTRING, HWID, NO_ID) != NULL)
+        {
             LOGF_ERROR(global_thl, 0, "HWID already in one connection thread, exiting this one to prevent duplicate session", "printf");
             close(clisock);
             pthread_exit(0);
@@ -91,17 +99,19 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     // verification finished, now wait for client to tell us it is at lobby
 
     mysql_register(THREAD_IP, HWID);
-    char *retc = saferecv(clisock_ptr, CONNECTION_TID, global_thl, lengthofstring("inlobby"), "lobby notification", "inlobby");
+    char *retc = saferecv(clisock_ptr, CONNECTION_TID, lengthofstring("inlobby"), "lobby notification", "inlobby");
     free(retc);
 
     pthread_mutex_lock(&rand_mutex);
     int malint;
     urand_ptr = fopen("/dev/urandom", "rb");
-    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0) {
+    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0)
+    {
         LOGF_ERROR(global_thl, 0, "fread error, returned 0 or below", "printf");
         LOGF_ERROR(global_thl, 0, "%s", strerror(errno), "printf");
     }
-    if (malint < 0) {
+    if (malint < 0)
+    {
         malint = abs(malint);
     }
     fclose(urand_ptr);
@@ -110,40 +120,62 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     char *CONNECT_CODE = malloc(11 + 2);
     snprintf(CONNECT_CODE, 8, "%d", malint); // put only 8 bytes of malint into CONNECT_CODE (7 numbers)
     strcat(CONNECT_CODE, "\n");
+    safesend(clisock_ptr, CONNECTION_TID, CONNECT_CODE);
 
-    safesend(clisock_ptr, CONNECTION_TID, global_thl, CONNECT_CODE);
-
-    // SessionInfoNode_T* CHECK_NODE;
-    // CHECK_NODE = find_node(LIST_HEAD, NULLSTRING, HWID, NO_ID);
-    // CONNECT_CODE and HWID are fine normally in memory, but when we insert it into the node, for some reason it gets corrupted...
     int self_id = add_node(&LIST_HEAD, CONNECT_CODE, THREAD_IP, HWID, CONNECTION_TID, READY);
+    SessionInfoNode_T *SELF_NODE;
+    SELF_NODE = find_node(LIST_HEAD, NULLSTRING, NULLSTRING, NULLSTRING, self_id);
     free(CONNECT_CODE);
     free(HWID);
 
-    char *clientmsg;
-    reuptake:
-        clientmsg = saferecv(clisock_ptr, CONNECTION_TID, global_thl, 24, "client message",NULLSTRING);
-        // printf("clientmsg : %s\n", clientmsg);
-        if (strstr(clientmsg, "connectto_") != NULL) {
-            char *TARGET_CODE = strremove(clientmsg, "connectto_");
-            // printf("target code : %s\n", TARGET_CODE);
-                
-            timer_signal_ran(THREAD_IP);
-            SessionInfoNode_T* TARGET_NODE;
-            TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NULLSTRING, NO_ID);
-            if (TARGET_NODE != NULL) {
-                printf("ID of node containing connect code %s : %d\n", TARGET_CODE, TARGET_NODE->ID);
-                printf("IP Address : %s\n", TARGET_NODE->THREAD_IP);
+    char clientmsg[26];
+    int input_status;
+    while (true)
+    {
+        if (SELF_NODE->STATUS == BUSY)
+        {
+            char acceptordeny_msg[44] = "";
+            strcat(acceptordeny_msg, "acceptordeny_");
+            strcat(acceptordeny_msg, SELF_NODE->SENDER_NAME);
+            strcat(acceptordeny_msg, "\n");
+
+            safesend(clisock_ptr, CONNECTION_TID, acceptordeny_msg);
+            saferecv(clisock_ptr, CONNECTION_TID, 15, "accept or denial", NULLSTRING);
+
+            // once we're done with everything to prevent spamming
+            SELF_NODE->STATUS = READY;
+        }
+
+        input_status = recv(*clisock_ptr, (void *)clientmsg, 24, MSG_DONTWAIT); //non-blocking flag so we can run this with a recv call
+        if (input_status != -1)
+        {
+            if (strstr(clientmsg, "connectto_") != NULL)
+            {
+                char *TARGET_CODE = strremove(clientmsg, "connectto_");
+                strcpy(SELF_NODE->NAME, saferecv(clisock_ptr, CONNECTION_TID, 15, "name", NULLSTRING));
+                timer_signal_ran(THREAD_IP);
+                SessionInfoNode_T *TARGET_NODE;
+                TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NULLSTRING, NO_ID);
+                if (TARGET_NODE != NULL)
+                {
+                    printf("ID of node containing connect code %s : %d\n", TARGET_CODE, TARGET_NODE->ID);
+                    printf("IP Address : %s\n", TARGET_NODE->THREAD_IP);
+                    TARGET_NODE->STATUS = BUSY; // target node is now aware we are attempting to connect because it's busy
+                    strcpy(TARGET_NODE->SENDER_NAME, SELF_NODE->NAME);
+                }
             }
-            goto reuptake;
+            else if (strcmp(clientmsg, "done") == 0)
+            {
+                LOGF_DEBUG(global_thl, 0, "Client says we are done (CONNECTION TID: %d)", CONNECTION_TID, "printf");
+                break;
+            }
+            else if (strcmp(clientmsg, "SOCKET_ERROR") == 0)
+            {
+                break;
+            }
         }
-        else if (strcmp(clientmsg, "done") == 0) {
-            LOGF_DEBUG(global_thl, 0, "Client says we are done (CONNECTION TID: %d)", CONNECTION_TID, "printf");
-        }
-        else if (strcmp(clientmsg, "SOCKET_ERROR") == 0) {
-           // no message because saferecv will already print this for us
-        }
-        free(clientmsg); // invalid pointer error (interrupted system call) ? may be unsafe
+        // printf("clientmsg : %s\n", clientmsg);
+    }
     LOGF_DEBUG(global_thl, 0, "Closing connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     LOGF_DEBUG(global_thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
     delete_node(&LIST_HEAD, self_id);
@@ -161,9 +193,6 @@ int main(enum MAIN_OPTION opt)
         // init shit
         LIST_HEAD = NULL;
         NULLSTRING = "Z&fw&pok5o!itKU!s";
-        if (signal(SIGINT, sig_handler) == SIG_ERR) {
-            LOGF_ERROR(global_thl, 0, "\ncan't catch SIG", "printf");
-        }
 
         thread_store(create);
         sprintf(appendcmd, "ps hH p %d | wc -l > /dev/shm/linkup-varstore/thread_count", getpid());
@@ -174,16 +203,13 @@ int main(enum MAIN_OPTION opt)
         serv_addr.sin_port = htons(PORT);
         serv_addr.sin_addr.s_addr = inet_addr("10.0.0.225");
 
-        struct timeval timeout;      
+        struct timeval timeout;
         timeout.tv_sec = TIMEOUT_IN;
         timeout.tv_usec = 0;
 
-        if (setsockopt (servsockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
-            LOGF_ERROR(global_thl, 0, "setsockopt so_rcvtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
-        if (setsockopt (servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
-            LOGF_ERROR(global_thl, 0, "setsockopt so_sndtimo unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
-        if (setsockopt(servsockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
-            LOGF_ERROR(global_thl, 0, "setsockopt so_reuseaddr unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
+        setsockopt(servsockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
+        setsockopt(servsockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+        setsockopt(servsockfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
         LOGF_DEBUG(global_thl, 0, "Set reuse", NULL);
         LOGF_DEBUG(global_thl, 0, "Binding...", NULL);
 
@@ -192,9 +218,10 @@ int main(enum MAIN_OPTION opt)
         if (bind_status == -1)
         {
             LOGF_ERROR(global_thl, 0, "Bind unsuccessful : %s (Error code %d)", strerror(errno), errno);
-            if (errno == 99) {
+            if (errno == 99)
+            {
                 LOGF_ERROR(global_thl, 0, "Wrong IP address, or system not connected to router perhaps?", NULL);
-                LOGF_ERROR(global_thl, 0, "Check if the configured IP in main.c is incorrect, IP could have changed...",NULL);
+                LOGF_ERROR(global_thl, 0, "Check if the configured IP in main.c is incorrect, IP could have changed...", NULL);
                 exit(0);
             }
 
@@ -203,7 +230,7 @@ int main(enum MAIN_OPTION opt)
                 LOGF_ERROR(global_thl, 0, "More than one process running maybe?", NULL);
                 exit(0);
             }
-            errno = 0;
+            
         }
 
         int listen_status;
@@ -212,7 +239,7 @@ int main(enum MAIN_OPTION opt)
         if (listen_status == -1)
         {
             LOGF_ERROR(global_thl, 0, "Listen unsuccessful : %s (Error code %d)\n", strerror(errno), errno);
-            errno = 0;
+            
         }
 
         // user now has input
@@ -226,7 +253,7 @@ int main(enum MAIN_OPTION opt)
         socklen_t cli_addr_size = sizeof(cli_addr);
 
         int clisock = accept(servsockfd, (SA *)&cli_addr, &cli_addr_size); // last two parameters should fill an optionable client struct for info
-        if (clisock >= 0)                                              // if client connects
+        if (clisock >= 0)                                                  // if client connects
         {
             for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++) // BANNED_RAWLEN_SIZE - 1 because we want to start at element 0 through the banned_addresses arrays
             {
