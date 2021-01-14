@@ -19,7 +19,7 @@
 
 // net utils
 
-void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
+void safesend(int * clisock, int TID, char *buf)
 {
     if (strchr(buf,'\n') == NULL) {
         LOGF_ERROR(global_thl, 0, "safesend : no newline detected in buffer provded, emergency closing socket", "printf");
@@ -30,15 +30,18 @@ void safesend(int * clisock, int TID, thread_logger *logger, char *buf)
     int send_status = send(*clisock, (void *)buf, (size_t)lengthofstring(buf), 0);
     if (send_status == -1) {
         print_send_err(TID);
-        close(*clisock);
-        pthread_exit(0);
+        if (errno == 32) { // if SIGPIPE
+            LOGF_ERROR(global_thl, 0, "Broken pipe detected, dropping thread. (TID %d)", TID, "printf");
+            close(*clisock);
+            pthread_exit(0);
+        }
     }
     else {
         LOGF_DEBUG(global_thl, 0 , "Sent %s", buf, "printf");
     }
 }
 
-char *saferecv(int * clisock, int TID, thread_logger *logger, size_t len, char* type, char *expected_string)
+char *saferecv(int * clisock, int TID, size_t len, char* type, char *expected_string)
 {
     char *buf = malloc((len + 1) * sizeof(char)); // +1 for '\0' character
     
@@ -160,16 +163,14 @@ void print_recv_err(int TID)
 {
     LOGF_ERROR(global_thl, 0, "Error reading from socket : (TID : %ld)", TID);
     LOGF_ERROR(global_thl, 0, "%s (Error code %d)", strerror(errno), errno);
-    
-    errno = 0; // reset global errno
 }
 
 void print_send_err(int TID)
 {
-    LOGF_ERROR(global_thl, 0, "Error writing to socket : (TID : %ld\n", TID);
+    LOGF_ERROR(global_thl, 0, "Error writing to socket : (TID : %ld)\n", TID);
     LOGF_ERROR(global_thl, 0, "%s (Error code %d) \n", strerror(errno), errno)
     
-    errno = 0;
+    
 }
 
 void thread_store(enum THREAD_STORE_OPTION opt)
@@ -182,7 +183,6 @@ void thread_store(enum THREAD_STORE_OPTION opt)
         if (system("mkdir /dev/shm/linkup-varstore") <= -1)
         {
             printf("possible system() error : %s (Error code %d)\n", strerror(errno), errno);
-            errno = 0; // keeping errno fresh incase current function didn't call it
         }
     }
 
@@ -205,7 +205,7 @@ void thread_store(enum THREAD_STORE_OPTION opt)
         {
             if (fscanf(fptr, "%d", &thread_count) == 0) {
                 printf("possible fscaf error : %s (Error code %d)\n", strerror(errno), errno);
-                errno = 0;
+                
             }
         }
 
