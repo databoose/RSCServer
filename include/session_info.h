@@ -20,6 +20,13 @@
         int CONNECTION_TID;
 
         char CONNECT_CODE[CONNECT_CODE_SIZE];
+        struct COORDINATES {
+            float LAT;
+            float LONG;
+        } COORDINATES;
+
+        char SENDER_NAME[24];
+        char NAME[24];
         state STATUS;
         int ID;
 
