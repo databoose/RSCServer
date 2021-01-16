@@ -11,7 +11,8 @@
 
     typedef enum {
         READY,
-        BUSY
+        BUSY,
+        DROPPED
     } state;
 
     struct SessionInfoNode {
@@ -35,6 +36,7 @@
     };
     typedef struct SessionInfoNode SessionInfoNode_T;
     extern SessionInfoNode_T* LIST_HEAD;
+    extern int node_index;
 
     int add_node(SessionInfoNode_T** head_ref, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int CONNECTION_TID, state STATUS);
     SessionInfoNode_T* find_node(SessionInfoNode_T* head, char *CONNECT_CODE, char *THREAD_IP, char *HWID, int ID);
