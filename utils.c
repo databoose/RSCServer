@@ -31,10 +31,11 @@ void safesend(int * clisock, int TID, char *buf)
     if (send_status == -1) {
         print_send_err(TID);
         if (errno == 32) { // if SIGPIPE
-            LOGF_ERROR(global_thl, 0, "Broken pipe detected, dropping thread. (TID %d)", TID, "printf");
-            close(*clisock);
-            pthread_exit(0);
+            LOGF_ERROR(global_thl, 0, "Broken pipe detected. (TID %d)", TID, "printf");
         }
+        LOGF_DEBUG(global_thl, 0, "Dropping thread", "printf");
+        close(*clisock);
+        pthread_exit(0);
     }
     else {
         LOGF_DEBUG(global_thl, 0 , "Sent %s", buf, "printf");
