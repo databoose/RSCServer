@@ -66,7 +66,7 @@ void delete_node(SessionInfoNode_T** head_ref, int ID) {
 
     // If key was not present in linked list 
     if (current == NULL) {
-        printf("current is NULL\n");
+        LOGF_ERROR(global_thl, 0, "Node that was going to be deleted does not exist", "printf");
         return;
     }
 
