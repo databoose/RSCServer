@@ -171,6 +171,15 @@ void cmd_input()
             if (deldir == -1) {
                 LOGF_ERROR(global_thl, 0, "Failed to remove dir, %s (Error code %d): ", strerror(errno), errno);
             }
+
+            SessionInfoNode_T *TEMP_NODE;
+            for (int i=0; i <= node_index; i++) {
+                TEMP_NODE = find_node(LIST_HEAD, NULLSTRING, NULLSTRING, NULLSTRING, node_index);
+                if (TEMP_NODE != NULL) {
+                    TEMP_NODE->STATUS = DROPPED;
+                }
+            }
+            usleep(5000 * 1000); // sleep for 5 seconds to wait for all threads to properly close
             exit(0);
         }
 
