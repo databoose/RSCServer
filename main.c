@@ -54,13 +54,11 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     int CONNECTION_TID;
     FILE *urand_ptr;
     urand_ptr = fopen("/dev/urandom", "rb");
-    if (fread(&CONNECTION_TID, 1, sizeof(int), urand_ptr) <= 0)
-    {
+    if (fread(&CONNECTION_TID, 1, sizeof(int), urand_ptr) <= 0) {
         LOGF_ERROR(global_thl, 0, "fread error, returned 0 or below", "printf");
         LOGF_ERROR(global_thl, 0, "%s", strerror(errno), "printf");
     }
-    if (CONNECTION_TID < 0)
-    {
+    if (CONNECTION_TID < 0) {
         CONNECTION_TID = abs(CONNECTION_TID);
     }
     fclose(urand_ptr);
@@ -81,8 +79,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     {
         HWID = strremove(HWID, "ny3_");
         LOGF_DEBUG(global_thl, 0, "Client HWID : %s\n", HWID, "printf");
-        if (find_node(LIST_HEAD, NULLSTRING, NULLSTRING, HWID, NO_ID) != NULL)
-        {
+        if (find_node(LIST_HEAD, NULLSTRING, NULLSTRING, HWID, NO_ID) != NULL) {
             LOGF_ERROR(global_thl, 0, "HWID already in one connection thread, exiting this one to prevent duplicate session", "printf");
             close(clisock);
             pthread_exit(0);
@@ -105,13 +102,11 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     pthread_mutex_lock(&rand_mutex);
     int malint;
     urand_ptr = fopen("/dev/urandom", "rb");
-    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0)
-    {
+    if (fread(&malint, 1, sizeof(int), urand_ptr) <= 0) {
         LOGF_ERROR(global_thl, 0, "fread error, returned 0 or below", "printf");
         LOGF_ERROR(global_thl, 0, "%s", strerror(errno), "printf");
     }
-    if (malint < 0)
-    {
+    if (malint < 0) {
         malint = abs(malint);
     }
     fclose(urand_ptr);
@@ -141,9 +136,17 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
 
             safesend(clisock_ptr, CONNECTION_TID, acceptordeny_msg);
             saferecv(clisock_ptr, CONNECTION_TID, 15, "accept or denial", NULLSTRING);
+            // get the answer from client and handle it
 
             // once we're done with everything to prevent spamming
             SELF_NODE->STATUS = READY;
+        }
+
+        if (SELF_NODE->STATUS == DROPPED) { // if we're told to shutdown (probably through global exit command for graceful drop) 
+            LOGF_DEBUG(global_thl, 0, "Shutting down (TID : %d)", "printf", CONNECTION_TID);
+            delete_node(&LIST_HEAD, self_id);
+            close(clisock);
+            pthread_exit(0);
         }
 
         input_status = recv(*clisock_ptr, (void *)clientmsg, 24, MSG_DONTWAIT); //non-blocking flag so we can run this with a recv call
@@ -156,8 +159,7 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
                 timer_signal_ran(THREAD_IP);
                 SessionInfoNode_T *TARGET_NODE;
                 TARGET_NODE = find_node(LIST_HEAD, TARGET_CODE, NULLSTRING, NULLSTRING, NO_ID);
-                if (TARGET_NODE != NULL)
-                {
+                if (TARGET_NODE != NULL) {
                     printf("ID of node containing connect code %s : %d\n", TARGET_CODE, TARGET_NODE->ID);
                     printf("IP Address : %s\n", TARGET_NODE->THREAD_IP);
                     TARGET_NODE->STATUS = BUSY; // target node is now aware we are attempting to connect because it's busy
@@ -218,15 +220,13 @@ int main(enum MAIN_OPTION opt)
         if (bind_status == -1)
         {
             LOGF_ERROR(global_thl, 0, "Bind unsuccessful : %s (Error code %d)", strerror(errno), errno);
-            if (errno == 99)
-            {
+            if (errno == 99) {
                 LOGF_ERROR(global_thl, 0, "Wrong IP address, or system not connected to router perhaps?", NULL);
                 LOGF_ERROR(global_thl, 0, "Check if the configured IP in main.c is incorrect, IP could have changed...", NULL);
                 exit(0);
             }
 
-            if (errno == 98)
-            {
+            if (errno == 98) {
                 LOGF_ERROR(global_thl, 0, "More than one process running maybe?", NULL);
                 exit(0);
             }
@@ -257,22 +257,19 @@ int main(enum MAIN_OPTION opt)
         {
             for (int i = 0; i <= BANNED_RAWLEN_SIZE - 1; i++) // BANNED_RAWLEN_SIZE - 1 because we want to start at element 0 through the banned_addresses arrays
             {
-                if (strcmp(inet_ntoa(cli_addr.sin_addr), banned_addresses[i]) == 0)
-                {
+                if (strcmp(inet_ntoa(cli_addr.sin_addr), banned_addresses[i]) == 0) {
                     LOGF_WARN(global_thl, 0, "Banned IP address %s attempted to connect, refusing to open connection thread", inet_ntoa(cli_addr.sin_addr));
                     close(clisock);
                     main(skip_to_connloop); // we escape this forloop and the code below doesn't run
                 }
 
-                else if (strcmp(inet_ntoa(cli_addr.sin_addr), banned_addresses[i]) != 0)
-                {
+                else if (strcmp(inet_ntoa(cli_addr.sin_addr), banned_addresses[i]) != 0) {
                     continue;
                 }
             }
 
             thread_store(update);
-            if (thread_count >= MAX_GLOBAL_THREADS)
-            {
+            if (thread_count >= MAX_GLOBAL_THREADS) {
                 LOGF_DEBUG(global_thl, 0, "MAX_GLOBAL_THREADS cap hit, blocking further connections until a thread is open", "printf");
                 close(clisock);
                 main(skip_to_connloop); // we escape this forloop and the code below doesn't run
