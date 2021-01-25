@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <ifaddrs.h>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -75,14 +76,17 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     safesend(clisock_ptr, CONNECTION_TID, "4Ex{Y**y8wOh!T00\n"); // telling client we got its verification response string
 
     char *HWID = saferecv(clisock_ptr, CONNECTION_TID, 20, "HWID", NULLSTRING);
-    if (strstr(HWID, "ny3_") != NULL)
-    {
+    if (strstr(HWID, "ny3_") != NULL) {
         HWID = strremove(HWID, "ny3_");
         LOGF_DEBUG(global_thl, 0, "Client HWID : %s\n", HWID, "printf");
-        if (find_node(LIST_HEAD, NULLSTRING, NULLSTRING, HWID, NO_ID) != NULL) {
-            LOGF_ERROR(global_thl, 0, "HWID already in one connection thread, exiting this one to prevent duplicate session", "printf");
-            close(clisock);
-            pthread_exit(0);
+        
+        SessionInfoNode_T *HWID_NODE = find_node(LIST_HEAD, NULLSTRING, NULLSTRING, HWID, NO_ID);
+        if (HWID_NODE != NULL) {
+            LOGF_ERROR(global_thl, 0, "HWID already in one connection thread, dropping previous", "printf");
+            HWID_NODE->STATUS = DROPPED;
+        }
+        else if (HWID_NODE == NULL) { // not a duplicate
+           //continue
         }
     }
     else
@@ -117,13 +121,16 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     strcat(CONNECT_CODE, "\n");
     safesend(clisock_ptr, CONNECTION_TID, CONNECT_CODE);
 
+    pthread_mutex_lock(&linked_list_mutex);
     int self_id = add_node(&LIST_HEAD, CONNECT_CODE, THREAD_IP, HWID, CONNECTION_TID, READY);
+    pthread_mutex_unlock(&linked_list_mutex);
+
     SessionInfoNode_T *SELF_NODE;
     SELF_NODE = find_node(LIST_HEAD, NULLSTRING, NULLSTRING, NULLSTRING, self_id);
     free(CONNECT_CODE);
     free(HWID);
 
-    char clientmsg[26];
+    char clientmsg[36]; // this may not work, remove if segfault
     int input_status;
     while (true)
     {
@@ -135,7 +142,14 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
             strcat(acceptordeny_msg, "\n");
 
             safesend(clisock_ptr, CONNECTION_TID, acceptordeny_msg);
-            saferecv(clisock_ptr, CONNECTION_TID, 15, "accept or denial", NULLSTRING);
+            char* response;
+            response = saferecv(clisock_ptr, CONNECTION_TID, 25, "accept or denial", NULLSTRING);
+            if (strcmp(response, "YES") == 0) {
+                LOGF_DEBUG(global_thl, 0, "User accepted", "printf");
+            }
+            else if (strcmp(response, "NO") == 0) {
+                LOGF_DEBUG(global_thl, 0, "User declined", "printf");
+            }
             // get the answer from client and handle it
 
             // once we're done with everything to prevent spamming
@@ -181,7 +195,6 @@ void handle_connection(void *p_clisock) // thread functions need to be a void po
     LOGF_DEBUG(global_thl, 0, "Closing connection (CONNECTION TID: %d)", CONNECTION_TID, "printf")
     LOGF_DEBUG(global_thl, 0, "Connection thread done , closing connection thread (CONNECTION TID: %d)", CONNECTION_TID, "printf");
     delete_node(&LIST_HEAD, self_id);
-
     close(clisock);
     pthread_exit(0);
 }
